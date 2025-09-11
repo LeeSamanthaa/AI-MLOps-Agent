@@ -1,0 +1,8 @@
+# requirements-dev.txt
+# Packages needed for development, formatting, and linting.
+
+black
+ruff
+
+# The line below tells pip to also install everything from requirements.txt
+-r requirements.txt

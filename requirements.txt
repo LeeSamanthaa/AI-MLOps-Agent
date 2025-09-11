@@ -1,0 +1,17 @@
+streamlit
+pandas
+numpy
+plotly
+scikit-learn
+scikit-optimize
+imbalanced-learn
+shap
+groq
+xgboost
+lightgbm
+matplotlib
+mlflow
+fastapi
+uvicorn
+pydantic
+scipy
