@@ -28,18 +28,21 @@ This project is built with a robust, modular architecture to ensure maintainabil
 - **Context-Aware AI Co-Pilot (Hybrid RAG)**: A sidebar chatbot that leverages Retrieval-Augmented Generation. It answers specific user questions by dynamically combining a static expert knowledge base with the live context of your dataset, EDA findings, and model results.
 
 ## Project Structure
-.
+```
 ├── app.py                  # Main application controller/entry point
 ├── modules/
-│   ├── init.py         # Makes 'modules' a Python package
+│   ├── __init__.py         # Makes 'modules' a Python package
 │   ├── llm_utils.py        # All LLM interactions (Groq API, RAG, prompts)
 │   ├── pipeline.py         # Core ML pipeline, models, and custom transformers
 │   ├── ui_components.py    # All Streamlit UI rendering functions
 │   └── utils.py            # Data loading, helper functions, script generation
-├── requirements.txt        # Python package dependencies
+├── requirements.txt        # Core application dependencies
+├── requirements-dev.txt    # Development and code quality dependencies
 ├── README.md               # This file
 ├── TECHNICAL_DOCUMENTATION.md # In-depth architectural details
-└── ci.yaml                 # Basic CI workflow for code formatting
+└── .github/
+    └── workflows/
+        └── ci.yaml         # CI workflow for code formatting and quality checks```
 
 ## Getting Started
 

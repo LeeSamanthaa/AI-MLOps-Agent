@@ -12,9 +12,13 @@ if project_root not in sys.path:
 # ------------------------------------
 
 from modules.ui_components import (
-    initialize_session_state, display_sidebar_chat, display_welcome_page,
-    display_configuration_page, display_results_page
+    initialize_session_state,
+    display_sidebar_chat,
+    display_welcome_page,
+    display_configuration_page,
+    display_results_page,
 )
+
 
 def main():
     """
@@ -28,12 +32,13 @@ def main():
     display_sidebar_chat()
 
     # Main panel routing based on the current view in the session state.
-    if st.session_state.view == 'welcome':
+    if st.session_state.view == "welcome":
         display_welcome_page()
-    elif st.session_state.view == 'configuration':
+    elif st.session_state.view == "configuration":
         display_configuration_page()
-    elif st.session_state.view == 'results':
+    elif st.session_state.view == "results":
         display_results_page()
+
 
 if __name__ == "__main__":
     main()

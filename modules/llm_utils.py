@@ -4,6 +4,7 @@ import json
 # Attempt to import Groq, handle if not available
 try:
     from groq import Groq
+
     GROQ_AVAILABLE = True
 except ImportError:
     GROQ_AVAILABLE = False
@@ -11,9 +12,11 @@ except ImportError:
 # Attempt to import imblearn for SMOTE check
 try:
     from imblearn.over_sampling import SMOTE
+
     IMBLEARN_AVAILABLE = True
 except ImportError:
     IMBLEARN_AVAILABLE = False
+
 
 def generate_llm_response(prompt, api_key, is_json=False):
     """
@@ -29,13 +32,16 @@ def generate_llm_response(prompt, api_key, is_json=False):
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.1-8b-instant",
-            response_format=response_format
+            response_format=response_format,
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
         return f"Could not generate AI response. Error: {e}"
 
-def get_feature_engineering_prompt(df_info, target, numerical_features, categorical_features):
+
+def get_feature_engineering_prompt(
+    df_info, target, numerical_features, categorical_features
+):
     """
     Creates a prompt for the LLM to suggest feature engineering techniques.
     """
@@ -44,6 +50,7 @@ You are an expert data scientist. Analyze this dataset and recommend 2-4 specifi
 Dataset Info: Target={target}, Shape={df_info['shape']}, Numerics={numerical_features}, Categoricals={categorical_features}, Stats={df_info['description']}
 Return your response as a JSON object: {{"recommendations": [{{"technique": "binning|polynomial|log_transform|interaction", "column": "col_name", "rationale": "Why this helps.", "bins": 4, "degree": 2, "other_column": "other_col"}}]}}.
 Crucially, ensure every recommendation object in the list has a non-empty value for 'technique', 'column', and 'rationale'."""
+
 
 def get_ai_config_prompt(df):
     """
@@ -74,6 +81,7 @@ Based on the data, determine the following:
 """
     return prompt
 
+
 def get_rag_expert_context():
     """
     Returns a static knowledge base for the RAG system about ML concepts.
@@ -99,41 +107,53 @@ def get_rag_expert_context():
     * **Data Drift**: Occurs when the statistical properties of the data in production change from the data the model was trained on. **Business Impact**: This is a silent killer of model performance. If the average age of new customers suddenly drops, a model trained on older customers will become unreliable. Monitoring for drift is essential to know when a model needs to be retrained.
 """
 
+
 def generate_dynamic_data_context(df, config, eda_summary):
     """
     Creates a dynamic textual summary of the user's dataset and EDA findings for the RAG prompt.
     """
-    target = config.get('target')
+    target = config.get("target")
     if not target or df is None:
         return "No data loaded or target selected."
 
     context = f"**Dataset Shape:** {df.shape}\n\n"
-    numerical_features = config.get('numerical_features', [])
+    numerical_features = config.get("numerical_features", [])
     if numerical_features:
-        context += "**Descriptive Statistics for Numerical Features:**\n" + df[numerical_features].describe().to_string() + "\n\n"
-    
-    categorical_features = config.get('categorical_features', [])
+        context += (
+            "**Descriptive Statistics for Numerical Features:**\n"
+            + df[numerical_features].describe().to_string()
+            + "\n\n"
+        )
+
+    categorical_features = config.get("categorical_features", [])
     if categorical_features:
         context += "**Categorical Feature Value Counts:**\n"
         for col in categorical_features:
             context += f"- **{col}**:\n{df[col].value_counts().to_string()}\n"
-    
+
     if target in df.columns and numerical_features:
         numeric_df = df[numerical_features + [target]]
         if len(numeric_df.columns) > 1:
             try:
                 corr_matrix = numeric_df.corr(numeric_only=True)
                 if not corr_matrix.empty and target in corr_matrix:
-                    target_correlations = corr_matrix[target].sort_values(ascending=False).drop(target)
+                    target_correlations = (
+                        corr_matrix[target].sort_values(ascending=False).drop(target)
+                    )
                     context += "\n**Top 5 Feature Correlations with Target:**\n"
                     context += target_correlations.head(5).to_string()
             except Exception:
-                pass # Ignore correlation calculation errors
-    
+                pass  # Ignore correlation calculation errors
+
     if eda_summary:
-        context += "\n\n--- START EDA SUMMARY ---\n" + eda_summary + "\n--- END EDA SUMMARY ---"
+        context += (
+            "\n\n--- START EDA SUMMARY ---\n"
+            + eda_summary
+            + "\n--- END EDA SUMMARY ---"
+        )
 
     return context
+
 
 def apply_ai_recommendations():
     """
@@ -142,21 +162,25 @@ def apply_ai_recommendations():
     config_updates = {}
     messages = []
     for action in st.session_state.parsed_actions:
-        action_type = action.get('type')
-        if action_type == 'increase_tuning':
-            current_iterations = st.session_state.config.get('bayes_iterations', 15)
-            new_iterations = min(50, current_iterations + 10) # Cap at 50
-            config_updates['bayes_iterations'] = new_iterations
-            messages.append(f"Increased **Hyperparameter Tuning Iterations** to {new_iterations}.")
-        elif action_type == 'try_smote' and IMBLEARN_AVAILABLE:
-            config_updates['imbalance_method'] = 'SMOTE'
+        action_type = action.get("type")
+        if action_type == "increase_tuning":
+            current_iterations = st.session_state.config.get("bayes_iterations", 15)
+            new_iterations = min(50, current_iterations + 10)  # Cap at 50
+            config_updates["bayes_iterations"] = new_iterations
+            messages.append(
+                f"Increased **Hyperparameter Tuning Iterations** to {new_iterations}."
+            )
+        elif action_type == "try_smote" and IMBLEARN_AVAILABLE:
+            config_updates["imbalance_method"] = "SMOTE"
             messages.append("Enabled **SMOTE** for imbalanced data handling.")
-        elif action_type == 'try_feature_selection':
-            config_updates['use_statistical_feature_selection'] = True
+        elif action_type == "try_feature_selection":
+            config_updates["use_statistical_feature_selection"] = True
             messages.append("Enabled **Statistical Feature Selection**.")
-            
-    st.session_state.config.update(config_updates)
-    st.session_state.guide_message = "The AI Agent has automatically updated the following settings for you. Review them and re-run the pipeline.\n\n" + "\n".join([f"- {msg}" for msg in messages])
-    st.session_state.view = 'configuration'
-    st.rerun()
 
+    st.session_state.config.update(config_updates)
+    st.session_state.guide_message = (
+        "The AI Agent has automatically updated the following settings for you. Review them and re-run the pipeline.\n\n"
+        + "\n".join([f"- {msg}" for msg in messages])
+    )
+    st.session_state.view = "configuration"
+    st.rerun()
