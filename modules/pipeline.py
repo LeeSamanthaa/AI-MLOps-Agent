@@ -1,49 +1,36 @@
-import streamlit as st
+# modules/pipeline.py
+# FIX: Removed the ProgressTracker class and all related logic to resolve the 'cannot pickle _thread.lock' error.
+# Progress updates are now handled in the main thread after parallel execution completes.
+
 import pandas as pd
 import numpy as np
-import warnings
-import mlflow
+import pickle
+import streamlit as st
+import time
+import logging
+from joblib import Parallel, delayed
+from collections import Counter
+import os
+import json
 
 # --- Core ML & Data Libraries ---
 from sklearn.model_selection import StratifiedKFold, KFold, train_test_split
-from sklearn.ensemble import (
-    RandomForestClassifier,
-    GradientBoostingClassifier,
-    VotingClassifier,
-    RandomForestRegressor,
-    GradientBoostingRegressor,
-    VotingRegressor,
-)
+from sklearn.ensemble import (RandomForestClassifier, GradientBoostingClassifier, VotingClassifier,
+                              RandomForestRegressor, GradientBoostingRegressor, VotingRegressor)
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.preprocessing import (
-    StandardScaler,
-    MinMaxScaler,
-    OneHotEncoder,
-    LabelEncoder,
-    PolynomialFeatures,
-)
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
-    confusion_matrix,
-    mean_squared_error,
-    r2_score,
-    mean_absolute_error,
-)
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
+                             mean_squared_error, r2_score, mean_absolute_error)
+from sklearn.base import clone
 from sklearn.feature_selection import SelectKBest, f_classif, f_regression
 
-# --- Advanced MLOps Libraries ---
+# --- Advanced MLOps & Modeling Libraries ---
 try:
     from skopt import BayesSearchCV
     from skopt.space import Real, Integer
-
     SKOPT_AVAILABLE = True
 except ImportError:
     SKOPT_AVAILABLE = False
@@ -52,526 +39,360 @@ try:
     from imblearn.over_sampling import SMOTE
     from imblearn.ensemble import BalancedRandomForestClassifier
     from imblearn.pipeline import Pipeline as ImbPipeline
-
     IMBLEARN_AVAILABLE = True
 except ImportError:
-    from sklearn.pipeline import Pipeline as ImbPipeline  # Fallback
-
+    from sklearn.pipeline import Pipeline as ImbPipeline
     IMBLEARN_AVAILABLE = False
 
 try:
     from xgboost import XGBClassifier, XGBRegressor
-
     XGB_AVAILABLE = True
 except ImportError:
     XGB_AVAILABLE = False
 
 try:
     from lightgbm import LGBMClassifier, LGBMRegressor
-
     LGBM_AVAILABLE = True
 except ImportError:
     LGBM_AVAILABLE = False
 
-warnings.filterwarnings("ignore")
+try:
+    import mlflow
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
 
+# Import custom transformers from their dedicated, stable module
+from .transformers import SafeLabelEncoder, OutlierHandler, AIFeatureEngineer
 
-# --- Custom Transformers ---
-class OutlierHandler(BaseEstimator, TransformerMixin):
-    """A transformer to handle outliers by capping them at a specified IQR factor."""
+# --- Setup logging ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    def __init__(self, factor=1.5):
-        self.factor = factor
-        self.lower_bounds_ = {}
-        self.upper_bounds_ = {}
-
-    def fit(self, X, y=None):
-        X_numeric = X.select_dtypes(include=np.number)
-        for col in X_numeric.columns:
-            Q1 = X[col].quantile(0.25)
-            Q3 = X[col].quantile(0.75)
-            IQR = Q3 - Q1
-            self.lower_bounds_[col] = Q1 - self.factor * IQR
-            self.upper_bounds_[col] = Q3 + self.factor * IQR
-        return self
-
-    def transform(self, X, y=None):
-        X_copy = X.copy()
-        X_numeric = X_copy.select_dtypes(include=np.number)
-        for col in X_numeric.columns:
-            if col in self.lower_bounds_:
-                X_copy[col] = X_copy[col].clip(
-                    self.lower_bounds_[col], self.upper_bounds_[col]
-                )
-        return X_copy
-
-
-class AIFeatureEngineer(BaseEstimator, TransformerMixin):
-    """A transformer to apply feature engineering techniques recommended by the AI."""
-
-    def __init__(self, recommendations=None):
-        self.recommendations = recommendations if recommendations is not None else []
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        X_transformed = X.copy()
-        if not self.recommendations:
-            return X_transformed
-        for rec in self.recommendations:
-            try:
-                technique = rec.get("technique")
-                column = rec.get("column")
-                if column not in X_transformed.columns:
-                    continue
-                if technique == "binning":
-                    X_transformed[f"{column}_binned"] = pd.qcut(
-                        X_transformed[column],
-                        q=rec.get("bins", 4),
-                        labels=False,
-                        duplicates="drop",
-                    )
-                elif technique == "polynomial":
-                    poly = PolynomialFeatures(
-                        degree=rec.get("degree", 2), include_bias=False
-                    )
-                    poly_feats = poly.fit_transform(X_transformed[[column]])
-                    for i in range(1, poly_feats.shape[1]):
-                        X_transformed[f"{column}_pow{i+1}"] = poly_feats[:, i]
-                elif technique == "log_transform":
-                    X_transformed[f"{column}_log"] = np.log1p(X_transformed[column])
-                elif technique == "interaction":
-                    other_col = rec.get("other_column")
-                    if other_col and other_col in X_transformed.columns:
-                        X_transformed[f"{column}_{other_col}_interaction"] = (
-                            X_transformed[column] * X_transformed[other_col]
-                        )
-            except Exception as e:
-                st.warning(f"Could not apply '{technique}' on '{column}'. Error: {e}")
-        return X_transformed
-
+# FIX: The ProgressTracker class has been completely removed to prevent pickling errors.
 
 # --- Core Pipeline Logic ---
-def get_models_and_search_spaces(problem_type="Classification"):
-    """Returns a dictionary of models and their hyperparameter search spaces."""
-    models = {}
-    if problem_type == "Classification":
-        models = {
-            "LogisticRegression": {
-                "model": LogisticRegression(
-                    random_state=42, solver="liblinear", max_iter=1000
-                )
-            },
-            "RandomForest": {"model": RandomForestClassifier(random_state=42)},
-            "GradientBoosting": {"model": GradientBoostingClassifier(random_state=42)},
-            "Voting Classifier": {"model": None},
-        }
-        if IMBLEARN_AVAILABLE:
-            models["BalancedRandomForest"] = {
-                "model": BalancedRandomForestClassifier(random_state=42)
-            }
-        if XGB_AVAILABLE:
-            models["XGBoost"] = {
-                "model": XGBClassifier(
-                    random_state=42, use_label_encoder=False, eval_metric="logloss"
-                )
-            }
-        if LGBM_AVAILABLE:
-            models["LightGBM"] = {"model": LGBMClassifier(random_state=42)}
 
-        for name in models:
-            if "LogisticRegression" in name:
-                models[name]["params_bayes"] = {
-                    "classifier__C": Real(1e-3, 1e2, prior="log-uniform")
-                }
-            elif "RandomForest" in name:
-                models[name]["params_bayes"] = {
-                    "classifier__n_estimators": Integer(50, 250),
-                    "classifier__max_depth": Integer(5, 50),
-                }
-            elif "GradientBoosting" in name:
-                models[name]["params_bayes"] = {
-                    "classifier__n_estimators": Integer(50, 200),
-                    "classifier__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
-                }
-            elif "XGBoost" in name:
-                models[name]["params_bayes"] = {
-                    "classifier__n_estimators": Integer(50, 250),
-                    "classifier__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
-                    "classifier__max_depth": Integer(3, 10),
-                }
-            elif "LightGBM" in name:
-                models[name]["params_bayes"] = {
-                    "classifier__n_estimators": Integer(50, 250),
-                    "classifier__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
-                    "classifier__num_leaves": Integer(20, 50),
-                }
+def apply_manual_hyperparameters(model, model_name, config):
+    """
+    Apply user-specified manual hyperparameters to a model if manual tuning is enabled.
+
+    Args:
+        model: The sklearn model instance
+        model_name: Name of the model (e.g., 'LogisticRegression')
+        config: The session config dictionary
+
+    Returns:
+        model: The model with updated hyperparameters
+    """
+    if not config.get('manual_tuning_enabled', False):
+        return model
+
+    manual_params = config.get('manual_params', {}).get(model_name, {})
+    if not manual_params:
+        logging.info(f"No manual parameters found for {model_name}")
+        return model
+
+    # Create a new model instance to avoid modifying the original
+    new_model = clone(model)
+    
+    # Filter for parameters that actually exist on the model
+    valid_params = {p: v for p, v in manual_params.items() if hasattr(new_model, p)}
+    
+    if valid_params:
+        try:
+            new_model.set_params(**valid_params)
+            logging.info(f"Applied manual hyperparameters to {model_name}: {valid_params}")
+        except Exception as e:
+            logging.warning(f"Could not set manual params for {model_name}. Error: {e}")
+            return model # Return original model on failure
+    
+    return new_model
+
+def get_models_and_search_spaces(problem_type='Classification'):
+    """Returns a dictionary of models and their corresponding Bayesian search spaces."""
+    models = {}
+    if problem_type == 'Classification':
+        models = {
+            'LogisticRegression': {'model': LogisticRegression(random_state=42, max_iter=1000)},
+            'RandomForest': {'model': RandomForestClassifier(random_state=42)},
+            'GradientBoosting': {'model': GradientBoostingClassifier(random_state=42)},
+        }
+        if IMBLEARN_AVAILABLE: models['BalancedRandomForest'] = {'model': BalancedRandomForestClassifier(random_state=42)}
+        if XGB_AVAILABLE: models['XGBoost'] = {'model': XGBClassifier(random_state=42, use_label_encoder=False, eval_metric='logloss')}
+        if LGBM_AVAILABLE: models['LightGBM'] = {'model': LGBMClassifier(random_state=42)}
+        if len(models) > 1: models['Voting Classifier'] = {'model': None}
     else:  # Regression
         models = {
-            "LinearRegression": {"model": LinearRegression()},
-            "RandomForest": {"model": RandomForestRegressor(random_state=42)},
-            "GradientBoosting": {"model": GradientBoostingRegressor(random_state=42)},
-            "Voting Regressor": {"model": None},
+            'LinearRegression': {'model': LinearRegression()},
+            'RandomForest': {'model': RandomForestRegressor(random_state=42)},
+            'GradientBoosting': {'model': GradientBoostingRegressor(random_state=42)},
         }
-        if XGB_AVAILABLE:
-            models["XGBoost"] = {
-                "model": XGBRegressor(random_state=42, objective="reg:squarederror")
-            }
-        if LGBM_AVAILABLE:
-            models["LightGBM"] = {"model": LGBMRegressor(random_state=42)}
+        if XGB_AVAILABLE: models['XGBoost'] = {'model': XGBRegressor(random_state=42)}
+        if LGBM_AVAILABLE: models['LightGBM'] = {'model': LGBMRegressor(random_state=42)}
+        if len(models) > 1: models['Voting Regressor'] = {'model': None}
+    
+    for name, info in models.items():
+        if 'Voting' in name or info.get('model') is None:
+            continue
+        key = 'classifier' if problem_type == 'Classification' else 'regressor'
+        if 'LogisticRegression' in name: info['params_bayes'] = {f'{key}__C': Real(1e-3, 1e+2, prior='log-uniform')}
+        elif 'RandomForest' in name: info['params_bayes'] = {f'{key}__n_estimators': Integer(100, 500), f'{key}__max_depth': Integer(10, 100)}
+        elif 'GradientBoosting' in name: info['params_bayes'] = {f'{key}__n_estimators': Integer(100, 300), f'{key}__learning_rate': Real(0.01, 0.3)}
+        elif 'XGBoost' in name: info['params_bayes'] = {f'{key}__n_estimators': Integer(100, 500), f'{key}__learning_rate': Real(0.01, 0.3), f'{key}__max_depth': Integer(3, 15)}
+        elif 'LightGBM' in name: info['params_bayes'] = {f'{key}__n_estimators': Integer(100, 500), f'{key}__learning_rate': Real(0.01, 0.3), f'{key}__num_leaves': Integer(20, 100)}
 
-        model_key = "regressor"
-        for name in models:
-            if "RandomForest" in name:
-                models[name]["params_bayes"] = {
-                    f"{model_key}__n_estimators": Integer(50, 250),
-                    f"{model_key}__max_depth": Integer(5, 50),
-                }
-            elif "GradientBoosting" in name:
-                models[name]["params_bayes"] = {
-                    f"{model_key}__n_estimators": Integer(50, 200),
-                    f"{model_key}__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
-                }
-            elif "XGBoost" in name:
-                models[name]["params_bayes"] = {
-                    f"{model_key}__n_estimators": Integer(50, 250),
-                    f"{model_key}__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
-                    "classifier__max_depth": Integer(3, 10),
-                }
-            elif "LightGBM" in name:
-                models[name]["params_bayes"] = {
-                    f"{model_key}__n_estimators": Integer(50, 250),
-                    f"{model_key}__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
-                    f"{model_key}__num_leaves": Integer(20, 50),
-                }
     return models
 
+def suggest_base_models(results_df, metric):
+    """Suggests top 2-3 diverse models for an ensemble."""
+    if results_df.empty:
+        return []
+    
+    top_performers = results_df.sort_values(by=metric, ascending=False)
+    suggestions = top_performers['Model'].head(3).tolist()
+    
+    return suggestions
 
-@st.cache_resource(show_spinner="Running the full MLOps pipeline...")
-def run_pipeline(_df, _config):
-    """
-    Executes the end-to-end machine learning pipeline based on the provided configuration.
-    This includes preprocessing, model training, hyperparameter tuning, and evaluation.
-    """
-    config = _config.copy()
+# FIX: Modified function signature to remove the 'progress_tracker' parameter.
+def train_single_model(name, model_info, X_train, y_train, X_test, y_test, preprocessor, config, run_id):
+    """Function to train a single model, designed to be run in parallel."""
+    try:
+        problem_type = config['problem_type']
+        key = 'classifier' if problem_type == 'Classification' else 'regressor'
+        
+        if 'Voting' in name:
+            base_models_for_ensemble = config.get('ensemble_base_models', [])
+            all_models_info = get_models_and_search_spaces(problem_type)
+            estimators = [(m_name, clone(all_models_info[m_name]['model'])) for m_name in base_models_for_ensemble if m_name in all_models_info]
+            
+            if not estimators:
+                logging.warning(f"Skipping {name}: No valid base models selected.")
+                return None
+            
+            Ensemble = VotingClassifier if problem_type == 'Classification' else VotingRegressor
+            ensemble_params = {'estimators': estimators}
+            if problem_type == 'Classification':
+                ensemble_params['voting'] = 'soft'
+            
+            model = Ensemble(**ensemble_params)
+            pipeline = Pipeline(steps=[('preprocessor', preprocessor), ('ensemble', model)])
+            pipeline.fit(X_train, y_train)
+            best_model, best_score = pipeline, 0.0
+        else:
+            steps = [('preprocessor', preprocessor)]
+            if config.get('use_statistical_feature_selection'):
+                k = min(config.get('k_features', 10), X_train.shape[1])
+                if k < 1:
+                    logging.warning(f"Skipping feature selection for {name} as k={k} is less than 1.")
+                else:
+                    selector = SelectKBest(f_classif if problem_type == 'Classification' else f_regression, k=k)
+                    steps.append(('feature_selection', selector))
+            
+            if problem_type == 'Classification' and config.get('imbalance_method') == 'SMOTE' and IMBLEARN_AVAILABLE and 'Balanced' not in name:
+                steps.append(('smote', SMOTE(random_state=42)))
+            
+            model_instance = apply_manual_hyperparameters(
+                clone(model_info['model']), 
+                name, 
+                config
+            )
+            steps.append((key, model_instance))
+            pipeline = ImbPipeline(steps=steps)
 
-    if mlflow.active_run():
-        mlflow.end_run()
+            is_manual_tuning = config.get('manual_tuning_enabled', False) and name in config.get('manual_params', {})
+            
+            if is_manual_tuning:
+                manual_params = config['manual_params'][name]
+                manual_params = {k: v for k, v in manual_params.items() if v is not None}
+                prefixed_params = {f"{key}__{p_name}": p_val for p_name, p_val in manual_params.items()}
+                
+                pipeline.set_params(**prefixed_params)
+                pipeline.fit(X_train, y_train)
+                best_model, best_score = pipeline, 0.0
+            elif config.get('manual_tuning_enabled', False):
+                pipeline.fit(X_train, y_train)
+                best_model, best_score = pipeline, 0.0
+            elif SKOPT_AVAILABLE and 'params_bayes' in model_info:
+                bayes_iter = 5 if config.get('quick_test') else config['bayes_iterations']
+                cv_folds = 2 if config.get('quick_test') else config['cv_folds']
+                cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42) if problem_type == 'Classification' else KFold(n_splits=cv_folds, shuffle=True, random_state=42)
+                opt = BayesSearchCV(pipeline, model_info['params_bayes'], n_iter=bayes_iter, cv=cv, scoring=config['primary_metric'], random_state=42, n_jobs=1)
+                opt.fit(X_train, y_train)
+                best_model, best_score = opt.best_estimator_, opt.best_score_
+            else:
+                pipeline.fit(X_train, y_train)
+                best_model, best_score = pipeline, 0.0
+        
+        model_id = f"{run_id}-{name}".replace(" ", "_")
+        
+        y_pred = best_model.predict(X_test)
+        metrics = {'Model': name, 'Best_Score_CV': best_score, 'model_id': model_id}
+        
+        if problem_type == 'Classification':
+            y_prob = best_model.predict_proba(X_test) if hasattr(best_model, 'predict_proba') else None
+            metrics.update({'Accuracy': accuracy_score(y_test, y_pred), 'Precision': precision_score(y_test, y_pred, average='weighted', zero_division=0), 'Recall': recall_score(y_test, y_pred, average='weighted', zero_division=0)})
+            if y_prob is not None:
+                avg = 'weighted' if len(np.unique(y_train)) > 2 else 'binary'
+                metrics['F1-Score'] = f1_score(y_test, y_pred, average=avg, zero_division=0)
+                if len(np.unique(y_train)) > 2:
+                    metrics['ROC_AUC'] = roc_auc_score(y_test, y_prob, multi_class='ovr', average='weighted')
+                else:
+                    metrics['ROC_AUC'] = roc_auc_score(y_test, y_prob[:, 1])
+        else:
+            metrics.update({'R2_Score': r2_score(y_test, y_pred), 'MSE': mean_squared_error(y_test, y_pred), 'MAE': mean_absolute_error(y_test, y_pred)})
+        
+        return (model_id, best_model, metrics)
+    except ValueError as e:
+        logging.error(f"Data-related error training model {name}: {e}", exc_info=True)
+        st.error(f"Error training {name}: Check if your data, especially the target variable, is suitable for the selected model.")
+        return None
+    except TypeError as e:
+        logging.error(f"Type error training model {name}: {e}", exc_info=True)
+        st.error(f"Error training {name}: A data type mismatch may have occurred. Ensure features are correctly identified as numerical/categorical.")
+        return None
+    except Exception as e:
+        logging.error(f"A general error occurred while training model {name}: {e}", exc_info=True)
+        st.error(f"An unexpected error occurred while training {name}. Check logs for details.")
+        return None
+    # FIX: Removed the 'finally' block that called the progress tracker.
+
+@st.cache_data(show_spinner=False)
+def run_pipeline(_df, config_hash, _progress_placeholder, _model_store, phase='benchmark'):
+    """Executes the ML pipeline with parallel processing and phase-awareness."""
+    config = st.session_state.config
+    run_timestamp = int(time.time())
+    
+    progress_bar = _progress_placeholder.progress(0, text="Initializing pipeline...")
 
     run = None
+    if MLFLOW_AVAILABLE and config.get('mlflow_uri'):
+        try:
+            if mlflow.active_run():
+                mlflow.end_run()
+            mlflow.set_tracking_uri(config['mlflow_uri'])
+            mlflow.set_experiment(config.get('mlflow_experiment_name', 'AI_MLOps_Agent_Experiment'))
+            run = mlflow.start_run()
+            mlflow.log_params({k: v for k, v in config.items() if k != 'groq_api_key'})
+        except Exception as e:
+            st.warning(f"Could not connect to MLflow tracking server. Running without tracking. Error: {e}")
+            logging.warning(f"MLflow connection failed: {e}")
+            run = None
+    
+    run_id = run.info.run_id if run else f'local_{run_timestamp}'
+
     try:
-        # MLflow Setup
-        if config.get("mlflow_uri"):
-            try:
-                mlflow.set_tracking_uri(config["mlflow_uri"])
-                mlflow.set_experiment(
-                    config.get("mlflow_experiment_name", "AI_MLOps_Agent_Experiment")
-                )
-                run = mlflow.start_run(
-                    run_name=f"Run_{len(st.session_state.run_history)+1}"
-                )
-                loggable_params = {
-                    k: v
-                    for k, v in config.items()
-                    if k not in ["groq_api_key", "ensemble_base_models"]
-                    and isinstance(v, (str, int, float, bool))
-                }
-                mlflow.log_params(loggable_params)
-            except Exception as e:
-                st.warning(
-                    f"Could not connect to MLflow Tracking URI. Check the path/URL. Error: {e}"
-                )
-                if run and mlflow.active_run():
-                    mlflow.end_run()
-
-        # Data Preparation
-        df = _df.copy()
-        problem_type = config["problem_type"]
-        target = config["target"]
-
-        if st.session_state.ai_features_approved:
-            df = AIFeatureEngineer(st.session_state.feature_recommendations).transform(
-                df
-            )
-
-        all_features = config["numerical_features"] + config["categorical_features"]
-        X = df[all_features]
-        y = df[target]
-
-        # Drop rows where target is NaN
-        y = y.dropna()
-        X = X.loc[y.index]
-
-        le = None
-        if problem_type == "Classification":
-            le = LabelEncoder()
-            y = le.fit_transform(y)
-
-        stratify_option = (
-            y
-            if problem_type == "Classification"
-            and pd.Series(y).value_counts().min() >= 2
-            else None
-        )
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=config["test_size"],
-            random_state=42,
-            stratify=stratify_option,
-        )
-
-        st.session_state.training_data_stats = {"X_train_ref": X_train}
-
-        # Preprocessing Pipelines
-        numerical_steps = [
-            ("imputer", SimpleImputer(strategy=config["imputation_strategy"]))
-        ]
-        if config["handle_outliers"]:
-            numerical_steps.append(("outlier_handler", OutlierHandler()))
-        numerical_steps.append(
-            (
-                "scaler",
-                (
-                    StandardScaler()
-                    if config["scaler"] == "StandardScaler"
-                    else MinMaxScaler()
-                ),
-            )
-        )
-        numerical_transformer = Pipeline(steps=numerical_steps)
-
-        categorical_transformer = Pipeline(
-            steps=[
-                (
-                    "imputer",
-                    SimpleImputer(
-                        strategy=config["cat_imputation_strategy"],
-                        fill_value=(
-                            "missing"
-                            if config["cat_imputation_strategy"] == "constant"
-                            else None
-                        ),
-                    ),
-                ),
-                (
-                    "onehot",
-                    OneHotEncoder(
-                        handle_unknown="ignore",
-                        drop="first" if problem_type == "Classification" else None,
-                    ),
-                ),
-            ]
-        )
-
-        preprocessor = ColumnTransformer(
-            transformers=[
-                ("num", numerical_transformer, config["numerical_features"]),
-                ("cat", categorical_transformer, config["categorical_features"]),
-            ],
-            remainder="passthrough",
-        )
-
-        # Model Training and Evaluation Loop
+        progress_bar.progress(0, text="Initializing pipeline...")
+        df, problem_type, target = _df.copy(), config['problem_type'], config['target']
+        
+        all_features = [f for f in config['numerical_features'] + config['categorical_features'] if f in df.columns]
+        X, y_raw = df[all_features], df[target]
+        not_na_mask = y_raw.notna()
+        X, y_raw = X.loc[not_na_mask], y_raw[not_na_mask]
+        
+        progress_bar.progress(5, text="Encoding target variable...")
+        le = SafeLabelEncoder() if problem_type == 'Classification' else None
+        y = le.fit(y_raw).transform(y_raw) if le else y_raw
+        
+        progress_bar.progress(10, text="Splitting data into training and test sets...")
+        stratify = y if problem_type == 'Classification' and pd.Series(y).nunique() > 1 else None
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=config['test_size'], random_state=42, stratify=stratify)
+        st.session_state.training_data_stats = {'X_train_ref': X_train, 'X_test_ref': X_test, 'y_test_ref': y_test, 'le_ref': le}
+        
+        progress_bar.progress(15, text="Building preprocessing pipeline...")
+        num_features = [col for col in X_train.select_dtypes(include=np.number).columns.tolist() if col in config['numerical_features']]
+        cat_features = [col for col in X_train.select_dtypes(exclude=np.number).columns.tolist() if col in config['categorical_features']]
+        
+        num_transformer_steps = [('imputer', SimpleImputer(strategy=config['imputation_strategy'])), ('scaler', StandardScaler() if config['scaler'] == 'StandardScaler' else MinMaxScaler())]
+        if config['handle_outliers']:
+            num_transformer_steps.insert(1, ('outlier_handler', OutlierHandler()))
+        num_transformer = Pipeline(steps=num_transformer_steps)
+        
+        cat_transformer = Pipeline(steps=[('imputer', SimpleImputer(strategy='constant', fill_value='missing')), ('onehot', OneHotEncoder(handle_unknown='ignore', drop='first' if problem_type == 'Classification' else None))])
+        
+        preprocessor = ColumnTransformer(transformers=[('num', num_transformer, num_features), ('cat', cat_transformer, cat_features)], remainder='passthrough')
+        
         all_models = get_models_and_search_spaces(problem_type)
-        results = []
-        models_to_run = {
-            name: all_models[name]
-            for name in config["selected_models"]
-            if name in all_models
-        }
+        
+        if phase == 'benchmark':
+            models_to_run = {name: info for name, info in all_models.items() if 'Voting' not in name and name in config['selected_models']}
+        else:
+            model_name = 'Voting Classifier' if problem_type == 'Classification' else 'Voting Regressor'
+            models_to_run = {model_name: all_models[model_name]}
 
-        for name, model_info in models_to_run.items():
-            with st.spinner(f"Training {name}..."):
-                is_ensemble = "Voting" in name
-                if is_ensemble:
-                    base_estimators_config = get_models_and_search_spaces(problem_type)
-                    estimators = []
-                    for model_name in config.get("ensemble_base_models", []):
-                        if (
-                            model_name in base_estimators_config
-                            and "Voting" not in model_name
-                        ):
-                            estimators.append(
-                                (
-                                    model_name,
-                                    clone(base_estimators_config[model_name]["model"]),
-                                )
-                            )
-                    if not estimators:
-                        continue
-
-                    EnsembleModel = (
-                        VotingClassifier
-                        if problem_type == "Classification"
-                        else VotingRegressor
-                    )
-                    ensemble_model = EnsembleModel(
-                        estimators=estimators,
-                        voting="soft" if problem_type == "Classification" else "hard",
-                    )
-                    best_model = Pipeline(
-                        steps=[
-                            ("preprocessor", preprocessor),
-                            ("ensemble", ensemble_model),
-                        ]
-                    ).fit(X_train, y_train)
-                    best_score = 0.0
-                else:
-                    PipelineClass = ImbPipeline
-                    steps = [("preprocessor", preprocessor)]
-
-                    feature_selection_func = (
-                        f_classif if problem_type == "Classification" else f_regression
-                    )
-                    if config["use_statistical_feature_selection"]:
-                        k = min(config["k_features"], len(all_features))
-                        if k > 0:
-                            steps.append(
-                                (
-                                    "feature_selection",
-                                    SelectKBest(feature_selection_func, k=k),
-                                )
-                            )
-
-                    if (
-                        problem_type == "Classification"
-                        and config["imbalance_method"] == "SMOTE"
-                        and IMBLEARN_AVAILABLE
-                        and "Balanced" not in name
-                    ):
-                        steps.append(("smote", SMOTE(random_state=42)))
-
-                    model_key = (
-                        "classifier"
-                        if problem_type == "Classification"
-                        else "regressor"
-                    )
-                    steps.append((model_key, clone(model_info["model"])))
-                    pipeline = PipelineClass(steps=steps)
-
-                    if SKOPT_AVAILABLE and "params_bayes" in model_info:
-                        cv_splitter = (
-                            StratifiedKFold(
-                                n_splits=config["cv_folds"],
-                                shuffle=True,
-                                random_state=42,
-                            )
-                            if problem_type == "Classification"
-                            else KFold(
-                                n_splits=config["cv_folds"],
-                                shuffle=True,
-                                random_state=42,
-                            )
-                        )
-                        optimizer = BayesSearchCV(
-                            pipeline,
-                            model_info["params_bayes"],
-                            n_iter=config["bayes_iterations"],
-                            cv=cv_splitter,
-                            scoring=config["primary_metric"],
-                            random_state=42,
-                            n_jobs=-1,
-                        )
-                        optimizer.fit(X_train, y_train)
-                        best_model, best_score = (
-                            optimizer.best_estimator_,
-                            optimizer.best_score_,
-                        )
-                    else:
-                        pipeline.fit(X_train, y_train)
-                        best_model, best_score = pipeline, 0.0
-
-                y_pred = best_model.predict(X_test)
-                metrics = {"Model": name, "Best_Score_CV": best_score}
-
-                if problem_type == "Classification":
-                    y_pred_proba = (
-                        best_model.predict_proba(X_test)
-                        if hasattr(best_model, "predict_proba")
-                        else None
-                    )
-                    metrics.update(
-                        {
-                            "Accuracy": accuracy_score(y_test, y_pred),
-                            "Precision": precision_score(
-                                y_test, y_pred, average="weighted", zero_division=0
-                            ),
-                            "Recall": recall_score(
-                                y_test, y_pred, average="weighted", zero_division=0
-                            ),
-                        }
-                    )
-                    if y_pred_proba is not None:
-                        if len(np.unique(y_train)) > 2:
-                            metrics.update(
-                                {
-                                    "ROC_AUC": roc_auc_score(
-                                        y_test, y_pred_proba, multi_class="ovr"
-                                    ),
-                                    "F1_Score": f1_score(
-                                        y_test,
-                                        y_pred,
-                                        average="weighted",
-                                        zero_division=0,
-                                    ),
-                                }
-                            )
-                        else:
-                            metrics.update(
-                                {
-                                    "ROC_AUC": roc_auc_score(
-                                        y_test, y_pred_proba[:, 1]
-                                    ),
-                                    "F1_Score": f1_score(
-                                        y_test, y_pred, zero_division=0
-                                    ),
-                                }
-                            )
-                else:  # Regression
-                    metrics.update(
-                        {
-                            "R2_Score": r2_score(y_test, y_pred),
-                            "MSE": mean_squared_error(y_test, y_pred),
-                            "MAE": mean_absolute_error(y_test, y_pred),
-                        }
-                    )
-
-                metrics["model_object"] = best_model
-                results.append(metrics)
-                if run and mlflow.active_run():
-                    with mlflow.start_run(
-                        run_id=run.info.run_id, nested=True
-                    ) as nested_run:
-                        mlflow.set_tag("Model", name)
-                        mlflow_metrics = {
-                            k.replace(" ", "_").replace("(", "").replace(")", ""): v
-                            for k, v in metrics.items()
-                            if k not in ["Model", "model_object"]
-                        }
-                        mlflow.log_metrics(mlflow_metrics)
-
-        results_df = pd.DataFrame(results)
-        results_df.rename(
-            columns={
-                "Best_Score_CV": "Best Score (CV)",
-                "ROC_AUC": "ROC AUC",
-                "F1_Score": "F1-Score",
-                "R2_Score": "R2 Score",
-            },
-            inplace=True,
+        logging.info(f"Starting pipeline run for phase '{phase}' with models: {list(models_to_run.keys())}")
+        progress_bar.progress(20, text=f"Training {len(models_to_run)} model(s) in parallel...")
+        
+        # FIX: Removed ProgressTracker and callback logic.
+        # FIX: Modified the delayed() call to remove the progress_tracker argument.
+        results_list = Parallel(n_jobs=-1)(
+            delayed(train_single_model)(
+                name, info, X_train, y_train, X_test, y_test, preprocessor, config, run_id
+            )
+            for name, info in models_to_run.items()
         )
-        primary_metric_col_display = config["primary_metric_display"]
-        best_model_row = results_df.sort_values(
-            by=primary_metric_col_display, ascending=False
-        ).iloc[0]
+        
+        # FIX: Update progress bar in the main thread AFTER all parallel jobs are complete.
+        progress_bar.progress(85, text="All models trained. Consolidating results...")
+        
+        results = []
+        for result in results_list:
+            if result:
+                model_id, best_model, metrics = result
+                _model_store.add_model(model_id, best_model)
+                results.append(metrics)
+        
+        progress_bar.progress(90, text="Finalizing results...")
+        
+        if not results:
+            st.error("No models were successfully trained. Please check your configuration, data, and logs for errors.")
+            _progress_placeholder.empty()
+            return None, None, None, None, None, None
 
-        if run and mlflow.active_run():
-            mlflow.sklearn.log_model(best_model_row["model_object"], "best_model")
+        results_df = pd.DataFrame(results).rename(columns={'Best_Score_CV': 'Best Score (CV)', 'ROC_AUC': 'ROC AUC', 'F1-Score': 'F1-Score', 'R2_Score': 'R2 Score'})
+        
+        if results_df.empty:
+            st.error("Could not generate a results summary because all models failed during training or evaluation.")
+            _progress_placeholder.empty()
+            return None, None, None, None, None, None
 
+        best_model_row = results_df.sort_values(by=config['primary_metric_display'], ascending=False).iloc[0]
+        if run:
+            progress_bar.progress(95, text="Logging best model to MLflow...")
+            best_model_obj = _model_store.get_model(best_model_row['model_id'])
+            if best_model_obj:
+                try:
+                    mlflow.sklearn.log_model(best_model_obj, "best_model")
+
+                    if st.session_state.get('feature_recommendations'):
+                        feature_artifact_path = "feature_engineering_config.json"
+                        with open(feature_artifact_path, 'w') as f:
+                            json.dump(st.session_state.feature_recommendations, f, indent=2)
+                        mlflow.log_artifact(feature_artifact_path)
+                        os.remove(feature_artifact_path)
+                        logging.info("Logged feature engineering config to MLflow")
+                except Exception as e:
+                    st.warning(f"Failed to log model to MLflow: {e}")
+                    logging.warning(f"MLflow model logging failed: {e}")
+
+        progress_bar.progress(100, text="Pipeline complete!")
+        time.sleep(1)
+        _progress_placeholder.empty()
+
+        # Save experiment to history for comparison
+        try:
+            from .utils import save_experiment_run
+            save_experiment_run(config, results_df, run_id)
+            logging.info(f"Experiment {run_id} saved to history")
+        except Exception as e:
+            logging.warning(f"Could not save experiment to history: {e}")
+        
         return results_df, le, X_train, y_train, X_test, y_test
-
+    
+    except Exception as e:
+        st.error(f"A critical error occurred in the MLOps pipeline: {e}")
+        logging.critical(f"MLOps pipeline failed: {e}", exc_info=True)
+        if _progress_placeholder: _progress_placeholder.empty()
+        return None, None, None, None, None, None
     finally:
         if run and mlflow.active_run():
             mlflow.end_run()

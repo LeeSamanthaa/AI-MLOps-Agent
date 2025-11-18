@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/06c64665366d46e69b41dfb3dfee430e/artifacts
+end_time: 1757641864242
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 06c64665366d46e69b41dfb3dfee430e
+run_name: useful-ram-806
+run_uuid: 06c64665366d46e69b41dfb3dfee430e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757641863878
+status: 3
+tags: []
+user_id: SCLee

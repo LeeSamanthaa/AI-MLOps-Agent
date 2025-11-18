@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/938a5be6ac714a538b697cd30a459e49/artifacts
+end_time: 1760386391273
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 938a5be6ac714a538b697cd30a459e49
+run_name: bustling-swan-229
+run_uuid: 938a5be6ac714a538b697cd30a459e49
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760386370103
+status: 3
+tags: []
+user_id: SCLee

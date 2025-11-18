@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/be9eea6186b54a0ca7577cfa59713d52/artifacts
+end_time: 1758172466524
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: be9eea6186b54a0ca7577cfa59713d52
+run_name: invincible-hawk-73
+run_uuid: be9eea6186b54a0ca7577cfa59713d52
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758172396305
+status: 3
+tags: []
+user_id: SCLee

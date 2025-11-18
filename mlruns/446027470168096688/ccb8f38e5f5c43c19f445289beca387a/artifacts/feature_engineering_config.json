@@ -1,0 +1,37 @@
+[
+  {
+    "technique": "polynomial",
+    "column": "Age",
+    "degree": 2,
+    "confidence_score": 75,
+    "rationale_long": "Creating degree-2 polynomial features for Age to capture non-linear relationships."
+  },
+  {
+    "technique": "polynomial",
+    "column": "Balance",
+    "degree": 2,
+    "confidence_score": 75,
+    "rationale_long": "Creating degree-2 polynomial features for Balance to capture non-linear relationships."
+  },
+  {
+    "technique": "polynomial",
+    "column": "CreditScore_binned",
+    "degree": 2,
+    "confidence_score": 75,
+    "rationale_long": "Creating degree-2 polynomial features for CreditScore_binned to capture non-linear relationships."
+  },
+  {
+    "technique": "interaction",
+    "column_1": "Age",
+    "column_2": "Balance",
+    "confidence_score": 70,
+    "rationale_long": "Testing interaction between Age and Balance to capture combined effects."
+  },
+  {
+    "technique": "interaction",
+    "column_1": "Age",
+    "column_2": "CreditScore_binned",
+    "confidence_score": 70,
+    "rationale_long": "Testing interaction between Age and CreditScore_binned to capture combined effects."
+  }
+]

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/1fe7e0b9a026482793b652cbd40e93e2/artifacts
+end_time: 1761799071652
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 1fe7e0b9a026482793b652cbd40e93e2
+run_name: brawny-hog-796
+run_uuid: 1fe7e0b9a026482793b652cbd40e93e2
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761799054872
+status: 3
+tags: []
+user_id: SCLee

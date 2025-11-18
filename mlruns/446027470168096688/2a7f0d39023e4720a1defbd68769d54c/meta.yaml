@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/2a7f0d39023e4720a1defbd68769d54c/artifacts
+end_time: 1761801966542
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 2a7f0d39023e4720a1defbd68769d54c
+run_name: valuable-sheep-800
+run_uuid: 2a7f0d39023e4720a1defbd68769d54c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761801929977
+status: 3
+tags: []
+user_id: SCLee

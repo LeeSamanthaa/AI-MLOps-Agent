@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/84665e10dcea442e8d3deeec9828dd37/artifacts
+end_time: 1763451915643
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 84665e10dcea442e8d3deeec9828dd37
+run_name: sincere-elk-829
+run_uuid: 84665e10dcea442e8d3deeec9828dd37
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1763450879777
+status: 3
+tags: []
+user_id: SCLee

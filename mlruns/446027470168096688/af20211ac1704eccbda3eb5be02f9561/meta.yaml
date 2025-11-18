@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/af20211ac1704eccbda3eb5be02f9561/artifacts
+end_time: 1763453425324
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: af20211ac1704eccbda3eb5be02f9561
+run_name: industrious-gnat-132
+run_uuid: af20211ac1704eccbda3eb5be02f9561
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1763453329552
+status: 3
+tags: []
+user_id: SCLee

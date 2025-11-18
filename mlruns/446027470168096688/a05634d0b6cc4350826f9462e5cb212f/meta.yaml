@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/a05634d0b6cc4350826f9462e5cb212f/artifacts
+end_time: 1763450865429
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: a05634d0b6cc4350826f9462e5cb212f
+run_name: worried-shrike-882
+run_uuid: a05634d0b6cc4350826f9462e5cb212f
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1763450861207
+status: 3
+tags: []
+user_id: SCLee

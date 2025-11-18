@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/462b105fc5fa4978888991567d6cab92/artifacts
+end_time: 1757641877628
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 462b105fc5fa4978888991567d6cab92
+run_name: respected-squid-67
+run_uuid: 462b105fc5fa4978888991567d6cab92
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757641877521
+status: 3
+tags: []
+user_id: SCLee

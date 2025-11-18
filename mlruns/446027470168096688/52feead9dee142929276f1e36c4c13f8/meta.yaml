@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/52feead9dee142929276f1e36c4c13f8/artifacts
+end_time: 1758852477089
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 52feead9dee142929276f1e36c4c13f8
+run_name: monumental-hen-625
+run_uuid: 52feead9dee142929276f1e36c4c13f8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758852476776
+status: 3
+tags: []
+user_id: SCLee

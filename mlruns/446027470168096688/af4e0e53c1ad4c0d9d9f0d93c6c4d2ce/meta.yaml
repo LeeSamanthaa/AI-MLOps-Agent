@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/af4e0e53c1ad4c0d9d9f0d93c6c4d2ce/artifacts
+end_time: 1758172609408
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: af4e0e53c1ad4c0d9d9f0d93c6c4d2ce
+run_name: placid-crane-831
+run_uuid: af4e0e53c1ad4c0d9d9f0d93c6c4d2ce
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758172546074
+status: 3
+tags: []
+user_id: SCLee

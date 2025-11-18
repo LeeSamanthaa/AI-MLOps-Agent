@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/c14f69e0aff44832a74239863dc5e7c4/artifacts
+end_time: 1757641871115
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: c14f69e0aff44832a74239863dc5e7c4
+run_name: worried-zebra-584
+run_uuid: c14f69e0aff44832a74239863dc5e7c4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757641870708
+status: 3
+tags: []
+user_id: SCLee

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/faf4d3c20dc64f4592f88386ebb21b8b/artifacts
+end_time: 1758852603892
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: faf4d3c20dc64f4592f88386ebb21b8b
+run_name: whimsical-chimp-836
+run_uuid: faf4d3c20dc64f4592f88386ebb21b8b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758852570581
+status: 3
+tags: []
+user_id: SCLee

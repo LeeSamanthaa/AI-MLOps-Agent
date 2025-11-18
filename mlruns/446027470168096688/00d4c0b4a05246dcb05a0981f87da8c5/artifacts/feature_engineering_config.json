@@ -1,0 +1,17 @@
+[
+  {
+    "technique": "polynomial",
+    "column": "YearBuilt_pow2",
+    "degree": 2
+  },
+  {
+    "technique": "polynomial",
+    "column": "YearBuilt_pow2",
+    "degree": 2
+  },
+  {
+    "technique": "polynomial",
+    "column": "YearBuilt_pow2",
+    "degree": 4
+  }
+]

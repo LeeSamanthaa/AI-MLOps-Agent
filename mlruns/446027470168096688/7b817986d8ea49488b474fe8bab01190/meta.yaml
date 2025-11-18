@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/7b817986d8ea49488b474fe8bab01190/artifacts
+end_time: 1758073897248
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 7b817986d8ea49488b474fe8bab01190
+run_name: unruly-hare-906
+run_uuid: 7b817986d8ea49488b474fe8bab01190
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758073699621
+status: 3
+tags: []
+user_id: SCLee

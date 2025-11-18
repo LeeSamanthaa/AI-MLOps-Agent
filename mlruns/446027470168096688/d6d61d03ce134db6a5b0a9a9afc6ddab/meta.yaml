@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/d6d61d03ce134db6a5b0a9a9afc6ddab/artifacts
+end_time: 1757711262703
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: d6d61d03ce134db6a5b0a9a9afc6ddab
+run_name: worried-sponge-437
+run_uuid: d6d61d03ce134db6a5b0a9a9afc6ddab
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757710547329
+status: 3
+tags: []
+user_id: SCLee

@@ -1,79 +1,106 @@
+# AI MLOps Agent: The Conversational Data-to-Deployment Platform
+<div style="text-align: center; margin-bottom: 25px;"> <strong>COMPLETE FULL-STACK By Samantha Lee</strong> </div>
 
+The **AI MLOps Agent** is an interactive, Streamlit-based application designed to fully automate and accelerate the end-to-end Machine Learning lifecycle for tabular data. Leveraging the power of a Large Language Model (LLM) for conversational control and insight generation, the Agent guides users from raw data ingestion and feature engineering to model training, evaluation, and production-ready deployment.
 
-# AI MLOps Agent
-
-## Overview
-
-The AI MLOps Agent is an enterprise-grade Streamlit application designed to automate and intelligently guide users through the end-to-end machine learning lifecycle for tabular data. It serves as an interactive partner for solving classification and regression problems, moving beyond a simple tool to an active agent that provides recommendations, automates configuration, and translates complex results into actionable business insights.
-
-This project is built with a robust, modular architecture to ensure maintainability, scalability, and a seamless user experience.
+It transforms complex, multi-step MLOps workflows into intuitive, iterative processes, making advanced model development accessible and governed.
 
 ## Key Features
 
-### Intelligent Automation
-- **AI Auto-Configuration**: Upon loading a dataset, the agent analyzes its schema and values to automatically determine the problem type (Classification vs. Regression), identify the target variable, and select appropriate feature columns.
-- **AI-Powered Feature Engineering**: The agent creatively suggests novel features (e.g., interaction terms, polynomial features, binning) by analyzing the statistical properties of the data, helping to uncover hidden patterns and improve model performance.
-- **Proactive AI Action Panel**: After each pipeline run, the AI analyzes the results and provides an executive summary along with concrete, actionable recommendations (e.g., "Enable SMOTE for imbalance," "Increase hyperparameter tuning"). These can be applied with a single click.
+### Conversational AI & Automation
+
+* **Conversational Data Cleaning & Feature Creation (Chatbot):** Use natural language commands to perform complex data transformations and build new features directly into your DataFrame. For example:
+    * `drop column CustomerID`
+    * `fill missing values in Age with median`
+    * `create polynomial feature for Age with degree 3`
+    * `create interaction feature between Age and Income`
+    * `create log transform for Balance`
+    * `bin the feature Salary into 5 bins`
+* **AI Auto-Configuration:** Automatically determine the **problem type** (Classification/Regression), **target variable**, and initial feature sets upon data upload.
+* **AI-Powered Feature Engineering:** Get creative, contextual recommendations (e.g., polynomial, interaction, log transforms) from the AI and apply them with a single click.
+* **Proactive Action Panel:** After training, the AI analyzes results, provides an executive summary, and suggests concrete, actionable steps for the next run (e.g., "Enable SMOTE," "Increase tuning iterations").
 
 ### Enterprise-Grade MLOps Pipeline
-- **Expanded Model Support**: Train and evaluate a suite of models, including `Logistic/Linear Regression`, `RandomForest`, `GradientBoosting`, `XGBoost`, and `LightGBM`.
-- **Ensemble Modeling**: Combine the predictions of multiple base models using a `VotingClassifier` or `VotingRegressor` to improve performance and robustness.
-- **Bayesian Hyperparameter Optimization**: Employs `BayesSearchCV` for intelligent and efficient hyperparameter tuning, yielding better results in fewer iterations than traditional grid search.
-- **Comprehensive Preprocessing**: Features a dynamic, customizable preprocessing pipeline including outlier handling (IQR method), multiple imputation strategies, feature scaling, and one-hot encoding.
+* **Expanded Model Suite:** Benchmark individual models including `Logistic/Linear Regression`, `RandomForest`, `GradientBoosting`, **`XGBoost`**, and **`LightGBM`**.
+* **Smart Ensemble Modeling:** Automatically or manually combine top-performing models using a `VotingClassifier` or `VotingRegressor` for improved robustness.
+* **Bayesian Hyperparameter Tuning:** Efficiently search for optimal model parameters using `BayesSearchCV`, outperforming traditional grid search in speed and results quality.
+* **Advanced Preprocessing:** Customizable pipeline steps for **outlier handling (IQR)**, multiple imputation strategies, feature scaling, and feature selection (SelectKBest).
 
 ### Iterative MLOps and Governance
-- **Experiment Tracking with MLflow**: Integrates seamlessly with an MLflow Tracking Server. Every run automatically logs parameters, performance metrics for all models, and saves the best-performing model as a versioned artifact.
-- **Data Drift Monitoring**: Detects changes in data distribution between the training set and new data using the Kolmogorov-Smirnov (KS) test, providing a critical signal for when a model may need retraining.
-- **Automated Deployment Assets**: Instantly generates a production-ready `FastAPI` script and a pickled model file (`best_model.pkl`), dramatically reducing the time from experimentation to deployment.
-- **Context-Aware AI Co-Pilot (Hybrid RAG)**: A sidebar chatbot that leverages Retrieval-Augmented Generation. It answers specific user questions by dynamically combining a static expert knowledge base with the live context of your dataset, EDA findings, and model results.
+* **Comprehensive EDA with AI Insights:** Automated statistical reports, interactive plots (correlation, distribution), and integrated **VIF Analysis** for multicollinearity detection. The AI provides specific advice on which features to remove to reduce multicollinearity.
+* **Explainability (XAI):** Interpret the best model with **SHAP values** and **Partial Dependence Plots (PDP)** to understand feature impact.
+* **Experiment Tracking:** A dedicated dashboard to view, compare, and reload configurations from previous training runs.
+* **Drift Monitoring:** Use the Kolmogorov-Smirnov (KS) test to compare new data against the training baseline, alerting when the model may need retraining.
+
+### Production-Ready Output
+
+* **One-Click Deployment Package:** Instantly download a **`.zip` file** containing all production assets for the best model:
+    * `model.pkl` (Trained pipeline)
+    * `app.py` (Production-ready **FastAPI** server script)
+    * `Dockerfile` (For easy containerization)
+    * `requirements.txt` & `config.yaml`
+* **Shareable HTML Report:** Generate a self-contained HTML file summarizing all results, AI insights, and XAI plots for non-technical stakeholders.
 
 ## Project Structure
+
+The application is organized into a modular structure for maintainability and scalability:
+
 ```
-├── app.py                  # Main application controller/entry point
-├── modules/
-│   ├── __init__.py         # Makes 'modules' a Python package
-│   ├── llm_utils.py        # All LLM interactions (Groq API, RAG, prompts)
-│   ├── pipeline.py         # Core ML pipeline, models, and custom transformers
-│   ├── ui_components.py    # All Streamlit UI rendering functions
-│   └── utils.py            # Data loading, helper functions, script generation
-├── requirements.txt        # Core application dependencies
-├── requirements-dev.txt    # Development and code quality dependencies
-├── README.md               # This file
-├── TECHNICAL_DOCUMENTATION.md # In-depth architectural details
-└── .github/
-    └── workflows/
-        └── ci.yaml         # CI workflow for code formatting and quality checks```
+├── .github/
+│   └── workflows/
+│       └── ci.yaml                 # GitHub Actions CI/CD Pipeline
+│
+├── modules/                        # Core Python package
+│   ├── __init__.py                 # Marks directory as a package
+│   ├── chatbot_executor.py         # LLM command parsing & execution
+│   ├── llm_utils.py                # Groq API interaction & structured prompt engineering
+│   ├── pipeline.py                 # Core ML model pipeline logic
+│   ├── transformers.py             # Custom scikit-learn transformers
+│   └── utils.py                    # Helper functions (state, deployment assets)
+│
+├── tests/
+│   ├── __init__.py                 # Optional, for test discovery
+│   └── test_pipeline.py            # Pytest unit tests for core functionality
+│
+├── app.py                          # Main Streamlit application entry point
+├── requirements.txt                # Python dependencies
+├── README.md                       # Project documentation
+└── setup.py / pyproject.toml       # (Optional) Packaging & installation metadata
+``` 
+
+
 
 ## Getting Started
 
 ### Prerequisites
-- Python 3.9+
-- An API key from [Groq](https://console.groq.com/keys) for AI features.
-- An MLflow Tracking Server (optional, can use local filesystem).
 
-### Installation
-1.  Clone the repository:
-    ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
-    ```
+* Python 3.10+
+* An API key from [Groq](https://console.groq.com/keys) for all AI features.
 
-2.  Create and activate a virtual environment:
+### Installation and Run
+
+1.  **Clone the repository and install dependencies:**
     ```bash
+    git clone [https://github.com/LeeSamanthaa/AI-MLOps-Agent.git](https://github.com/LeeSamanthaa/AI-MLOps-Agent.git)
+    cd AI-MLOps-Agent
     python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-    ```
-
-3.  Install the required packages:
-    ```bash
+    source venv/bin/activate
     pip install -r requirements.txt
     ```
 
-### Running the Application
-1.  Launch the Streamlit app:
+2.  **Launch the application:**
     ```bash
     streamlit run app.py
     ```
-2.  Open your web browser to the URL provided by Streamlit.
-3.  Enter your Groq API key in the sidebar to enable all AI features.
-4.  Upload a CSV file or select a sample dataset to begin.
+
+3.  **Configure:**
+    * Open your web browser to the provided URL.
+    * Enter your Groq API key in the sidebar.
+    * Upload a dataset or load one of the sample datasets to begin your MLOps journey!
+
+## Contact
+
+This entire project was developed solely by **Samantha** as a full-stack solution.
+
+For questions, feedback, or professional inquiries, please contact: Always seeking to make improvements!
+* **Email:** [Samantha.dataworks@gmail.com](mailto:Samantha.dataworks@gmail.com)

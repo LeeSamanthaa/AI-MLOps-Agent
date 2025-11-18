@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/7f4e1f08bacd41c99e05cbeb9c23b629/artifacts
+end_time: 1757705105031
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 7f4e1f08bacd41c99e05cbeb9c23b629
+run_name: stylish-stoat-356
+run_uuid: 7f4e1f08bacd41c99e05cbeb9c23b629
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757704895413
+status: 3
+tags: []
+user_id: SCLee

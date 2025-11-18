@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/a8542c7626ee479ab01a6ed63021344d/artifacts
+end_time: 1758606692873
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: a8542c7626ee479ab01a6ed63021344d
+run_name: valuable-lark-600
+run_uuid: a8542c7626ee479ab01a6ed63021344d
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758606682002
+status: 3
+tags: []
+user_id: SCLee

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/b46ad0c93ae84acbabeddf3ffaa7c25a/artifacts
+end_time: 1757969423857
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: b46ad0c93ae84acbabeddf3ffaa7c25a
+run_name: merciful-bee-899
+run_uuid: b46ad0c93ae84acbabeddf3ffaa7c25a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757968713990
+status: 3
+tags: []
+user_id: SCLee

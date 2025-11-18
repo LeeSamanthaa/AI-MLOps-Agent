@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/71c4f7ec7ff74b84bca0fad9e4a74e91/artifacts
+end_time: 1759888193641
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 71c4f7ec7ff74b84bca0fad9e4a74e91
+run_name: wistful-kite-152
+run_uuid: 71c4f7ec7ff74b84bca0fad9e4a74e91
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759888187161
+status: 3
+tags: []
+user_id: SCLee

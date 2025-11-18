@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/4a6b10e68d6b4ffdad1e981a73933c17/artifacts
+end_time: 1760384416784
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 4a6b10e68d6b4ffdad1e981a73933c17
+run_name: rebellious-ant-665
+run_uuid: 4a6b10e68d6b4ffdad1e981a73933c17
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760384407399
+status: 3
+tags: []
+user_id: SCLee

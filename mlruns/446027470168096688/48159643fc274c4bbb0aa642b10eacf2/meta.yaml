@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/48159643fc274c4bbb0aa642b10eacf2/artifacts
+end_time: 1758322565331
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 48159643fc274c4bbb0aa642b10eacf2
+run_name: upset-kite-58
+run_uuid: 48159643fc274c4bbb0aa642b10eacf2
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758322276759
+status: 3
+tags: []
+user_id: SCLee

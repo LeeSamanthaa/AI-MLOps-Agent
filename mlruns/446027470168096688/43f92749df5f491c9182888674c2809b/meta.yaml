@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/43f92749df5f491c9182888674c2809b/artifacts
+end_time: 1757641821716
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 43f92749df5f491c9182888674c2809b
+run_name: efficient-hawk-219
+run_uuid: 43f92749df5f491c9182888674c2809b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757641821329
+status: 3
+tags: []
+user_id: SCLee

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/f8e8f5de0eb54adbaa70fcefd3c728e9/artifacts
+end_time: 1757641876398
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: f8e8f5de0eb54adbaa70fcefd3c728e9
+run_name: stately-eel-555
+run_uuid: f8e8f5de0eb54adbaa70fcefd3c728e9
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757641876298
+status: 3
+tags: []
+user_id: SCLee

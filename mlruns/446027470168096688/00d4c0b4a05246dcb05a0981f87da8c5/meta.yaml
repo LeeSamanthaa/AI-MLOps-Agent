@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/00d4c0b4a05246dcb05a0981f87da8c5/artifacts
+end_time: 1761802508067
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 00d4c0b4a05246dcb05a0981f87da8c5
+run_name: upset-pug-707
+run_uuid: 00d4c0b4a05246dcb05a0981f87da8c5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761802470150
+status: 3
+tags: []
+user_id: SCLee

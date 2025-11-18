@@ -1,44 +1,58 @@
+# app.py
+# Main entry point for the Streamlit application.
+# UX ENHANCEMENT - Refined layout and added a welcome page for better user onboarding.
+# BUG FIX - Corrected session state initialization to prevent data loss on rerun.
+
 import streamlit as st
-import sys
-import os
-
-# --- Fix for ModuleNotFoundError ---
-# This block adds the project's root directory to Python's path. This is crucial
-# for ensuring that Streamlit can correctly locate and import the 'modules' package.
-# It makes the import system robust, regardless of how the script is executed.
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-# ------------------------------------
-
 from modules.ui_components import (
-    initialize_session_state,
-    display_sidebar_chat,
     display_welcome_page,
     display_configuration_page,
     display_results_page,
+    display_master_sidebar,
+    display_experiment_tracking_page
+)
+from modules.utils import initialize_session_state
+import logging
+
+# --- Page Configuration ---
+st.set_page_config(
+    page_title="AI MLOps Agent",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
+# --- Setup logging ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main():
-    """
-    Main function to run the Streamlit application.
-    Initializes session state and routes between different views.
-    """
-    # Initialize session state variables if they don't exist.
+    """Main function to run the Streamlit app."""
+    # Initialize session state if it's the first run
     initialize_session_state()
+    
+    # --- Main App Logic ---
+    if not st.session_state.get('data_loaded', False):
+        st.session_state.view = 'welcome'
+    
+    # Display the persistent master sidebar
+    if st.session_state.view != 'welcome':
+        display_master_sidebar()
 
-    # Display the AI Co-Pilot chat in the sidebar.
-    display_sidebar_chat()
-
-    # Main panel routing based on the current view in the session state.
-    if st.session_state.view == "welcome":
+    # --- View-based page rendering ---
+    if st.session_state.view == 'welcome':
         display_welcome_page()
-    elif st.session_state.view == "configuration":
+    elif st.session_state.view == 'configuration':
         display_configuration_page()
-    elif st.session_state.view == "results":
+    elif st.session_state.view == 'results':
         display_results_page()
-
+    elif st.session_state.view == 'experiments':
+        display_experiment_tracking_page()
+    else:
+        st.error("Invalid view selected. Please reset the application.")
+        if st.button("Reset"):
+            initialize_session_state(force=True)
+            st.rerun()
 
 if __name__ == "__main__":
     main()
+

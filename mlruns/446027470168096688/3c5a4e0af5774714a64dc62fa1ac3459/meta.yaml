@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/3c5a4e0af5774714a64dc62fa1ac3459/artifacts
+end_time: 1761793748226
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 3c5a4e0af5774714a64dc62fa1ac3459
+run_name: calm-mule-718
+run_uuid: 3c5a4e0af5774714a64dc62fa1ac3459
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761793734198
+status: 3
+tags: []
+user_id: SCLee

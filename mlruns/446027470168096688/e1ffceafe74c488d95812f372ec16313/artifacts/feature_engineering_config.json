@@ -1,0 +1,16 @@
+[
+  {
+    "technique": "interaction",
+    "column_1": "Age_binned",
+    "column_2": "Balance",
+    "confidence_score": 70,
+    "rationale_long": "Testing interaction between Age_binned and Balance to capture combined effects."
+  },
+  {
+    "technique": "interaction",
+    "column_1": "Age_binned",
+    "column_2": "CreditScore",
+    "confidence_score": 70,
+    "rationale_long": "Testing interaction between Age_binned and CreditScore to capture combined effects."
+  }
+]

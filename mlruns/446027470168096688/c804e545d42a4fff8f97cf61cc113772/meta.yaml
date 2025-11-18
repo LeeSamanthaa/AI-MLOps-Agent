@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/c804e545d42a4fff8f97cf61cc113772/artifacts
+end_time: 1761195754546
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: c804e545d42a4fff8f97cf61cc113772
+run_name: likeable-shoat-403
+run_uuid: c804e545d42a4fff8f97cf61cc113772
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761195708604
+status: 3
+tags: []
+user_id: SCLee

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/6f204a4f721141d2bed9f108fbce5c43/artifacts
+end_time: 1758079031437
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 6f204a4f721141d2bed9f108fbce5c43
+run_name: upbeat-pig-290
+run_uuid: 6f204a4f721141d2bed9f108fbce5c43
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758078451328
+status: 3
+tags: []
+user_id: SCLee

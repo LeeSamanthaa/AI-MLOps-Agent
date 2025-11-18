@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/1cdc09d744f54de79605a01c1da4da0f/artifacts
+end_time: 1762502159154
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 1cdc09d744f54de79605a01c1da4da0f
+run_name: indecisive-hen-841
+run_uuid: 1cdc09d744f54de79605a01c1da4da0f
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762502147272
+status: 3
+tags: []
+user_id: SCLee

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/afa5c693c68944c280976b1963c4c86a/artifacts
+end_time: 1762501858098
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: afa5c693c68944c280976b1963c4c86a
+run_name: abrasive-snake-513
+run_uuid: afa5c693c68944c280976b1963c4c86a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762501852786
+status: 3
+tags: []
+user_id: SCLee

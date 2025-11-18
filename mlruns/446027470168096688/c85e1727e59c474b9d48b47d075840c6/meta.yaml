@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/c85e1727e59c474b9d48b47d075840c6/artifacts
+end_time: 1761793526721
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: c85e1727e59c474b9d48b47d075840c6
+run_name: luminous-cub-77
+run_uuid: c85e1727e59c474b9d48b47d075840c6
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761793495387
+status: 3
+tags: []
+user_id: SCLee

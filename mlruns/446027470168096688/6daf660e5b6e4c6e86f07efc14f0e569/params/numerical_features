@@ -1,0 +1,1 @@
+['Age', 'Balance', 'CreditScore', 'CreditScore_binned', 'EstimatedSalary', 'HasCrCard', 'HasCrCard_IsActiveMember_interaction', 'IsActiveMember', 'NumOfProducts', 'Tenure']

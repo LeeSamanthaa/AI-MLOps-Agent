@@ -1,0 +1,16 @@
+[
+  {
+    "technique": "interaction",
+    "column_1": "Bathrooms",
+    "column_2": "SquareFootage_x_Bedrooms",
+    "confidence_score": 70,
+    "rationale_long": "Testing interaction between Bathrooms and SquareFootage_x_Bedrooms to capture combined effects."
+  },
+  {
+    "technique": "interaction",
+    "column_1": "Bathrooms",
+    "column_2": "YearBuilt",
+    "confidence_score": 70,
+    "rationale_long": "Testing interaction between Bathrooms and YearBuilt to capture combined effects."
+  }
+]

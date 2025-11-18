@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/bbaedfa353a64b72bef7608593290d37/artifacts
+end_time: 1762501803818
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: bbaedfa353a64b72bef7608593290d37
+run_name: upbeat-frog-820
+run_uuid: bbaedfa353a64b72bef7608593290d37
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762501788701
+status: 3
+tags: []
+user_id: SCLee

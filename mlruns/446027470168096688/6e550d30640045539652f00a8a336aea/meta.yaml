@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/6e550d30640045539652f00a8a336aea/artifacts
+end_time: 1757988267174
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 6e550d30640045539652f00a8a336aea
+run_name: illustrious-toad-82
+run_uuid: 6e550d30640045539652f00a8a336aea
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757987856987
+status: 3
+tags: []
+user_id: SCLee

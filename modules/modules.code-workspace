@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../.github"
+		},
+		{
+			"path": "../.pytest_cache"
+		},
+		{
+			"path": "../mlruns"
+		},
+		{
+			"path": "../tests"
+		}
+	]
+}

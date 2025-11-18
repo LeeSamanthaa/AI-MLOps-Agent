@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/39521004c6664cfab72625f87c4e3a36/artifacts
+end_time: 1758172472766
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 39521004c6664cfab72625f87c4e3a36
+run_name: gifted-gnat-200
+run_uuid: 39521004c6664cfab72625f87c4e3a36
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758172470644
+status: 3
+tags: []
+user_id: SCLee

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/69d8c7c3621f412eb2eff71f776ac0a8/artifacts
+end_time: 1757652478414
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 69d8c7c3621f412eb2eff71f776ac0a8
+run_name: casual-bee-171
+run_uuid: 69d8c7c3621f412eb2eff71f776ac0a8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757651899673
+status: 3
+tags: []
+user_id: SCLee

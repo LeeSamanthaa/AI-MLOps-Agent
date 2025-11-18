@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/1f2e34fae6d947648fe18e3c8360c540/artifacts
+end_time: 1757970283633
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 1f2e34fae6d947648fe18e3c8360c540
+run_name: likeable-gull-90
+run_uuid: 1f2e34fae6d947648fe18e3c8360c540
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757969987507
+status: 3
+tags: []
+user_id: SCLee

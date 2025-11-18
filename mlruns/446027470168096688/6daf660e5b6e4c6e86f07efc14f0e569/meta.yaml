@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/6daf660e5b6e4c6e86f07efc14f0e569/artifacts
+end_time: 1757657646633
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 6daf660e5b6e4c6e86f07efc14f0e569
+run_name: silent-smelt-718
+run_uuid: 6daf660e5b6e4c6e86f07efc14f0e569
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757657153692
+status: 3
+tags: []
+user_id: SCLee

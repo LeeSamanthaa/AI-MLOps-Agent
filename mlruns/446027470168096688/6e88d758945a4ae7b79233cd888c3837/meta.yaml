@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/6e88d758945a4ae7b79233cd888c3837/artifacts
+end_time: 1761794019026
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 6e88d758945a4ae7b79233cd888c3837
+run_name: awesome-bird-729
+run_uuid: 6e88d758945a4ae7b79233cd888c3837
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761794006338
+status: 3
+tags: []
+user_id: SCLee

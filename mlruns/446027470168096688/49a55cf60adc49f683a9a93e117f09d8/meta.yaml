@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/49a55cf60adc49f683a9a93e117f09d8/artifacts
+end_time: 1758169965551
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 49a55cf60adc49f683a9a93e117f09d8
+run_name: righteous-duck-323
+run_uuid: 49a55cf60adc49f683a9a93e117f09d8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758169149665
+status: 3
+tags: []
+user_id: SCLee

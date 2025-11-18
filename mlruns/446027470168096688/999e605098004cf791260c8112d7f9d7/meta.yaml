@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/999e605098004cf791260c8112d7f9d7/artifacts
+end_time: 1761171540143
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 999e605098004cf791260c8112d7f9d7
+run_name: intelligent-crow-581
+run_uuid: 999e605098004cf791260c8112d7f9d7
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761171515303
+status: 3
+tags: []
+user_id: SCLee

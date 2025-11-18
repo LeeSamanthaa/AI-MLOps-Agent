@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/547942b17a1541c28034c962b8412518/artifacts
+end_time: 1757612426828
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 547942b17a1541c28034c962b8412518
+run_name: Run_1
+run_uuid: 547942b17a1541c28034c962b8412518
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757612415980
+status: 3
+tags: []
+user_id: SCLee

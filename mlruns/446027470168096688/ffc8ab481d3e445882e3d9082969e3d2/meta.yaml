@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/ffc8ab481d3e445882e3d9082969e3d2/artifacts
+end_time: 1757641876192
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: ffc8ab481d3e445882e3d9082969e3d2
+run_name: fortunate-snail-466
+run_uuid: ffc8ab481d3e445882e3d9082969e3d2
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1757641873937
+status: 3
+tags: []
+user_id: SCLee

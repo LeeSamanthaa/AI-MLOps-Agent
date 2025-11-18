@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/1ebb732290654d0d8a697ba0053c0012/artifacts
+end_time: 1758606550584
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 1ebb732290654d0d8a697ba0053c0012
+run_name: carefree-fly-596
+run_uuid: 1ebb732290654d0d8a697ba0053c0012
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1758606464913
+status: 3
+tags: []
+user_id: SCLee

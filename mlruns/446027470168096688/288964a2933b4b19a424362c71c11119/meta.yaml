@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/288964a2933b4b19a424362c71c11119/artifacts
+end_time: 1761799139059
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 288964a2933b4b19a424362c71c11119
+run_name: aged-grub-463
+run_uuid: 288964a2933b4b19a424362c71c11119
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761799131527
+status: 3
+tags: []
+user_id: SCLee
