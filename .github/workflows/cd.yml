@@ -40,4 +40,4 @@ jobs:
           context: .
           push: true
           # FIX: Hardcoded lowercase name to fix the "repository name must be lowercase" error
-          tags: leesamanthaa/ai-mlops-agent:latest
+          tags: slee0213/ai-mlops-agent:latest
