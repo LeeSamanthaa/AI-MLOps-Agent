@@ -8,4 +8,6 @@ services:
       - ./:/app
     environment:
       - STREAMLIT_SERVER_HEADLESS=true
+      # NOTE: For local testing, you may need to uncomment and set your GROQ API key here
+      # - GROQ_API_KEY=gsk_...
     command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

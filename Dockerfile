@@ -10,11 +10,11 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=on
 
 # Install system dependencies required for building ML packages and Plotly (kaleido requires font rendering)
+# We install build tools and then clean them up in the pip install step
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
         gcc \
-        # Add packages for static file rendering (often needed for reports)
         libgomp1 \
         fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
@@ -30,6 +30,7 @@ COPY requirements.txt .
 # FIX: Clean up build dependencies in the same layer to minimize final image size
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
+    # Clean up unnecessary build dependencies after installation
     apt-get purge -y build-essential gcc && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
