@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/9cb5df13a9734bff84b50142b093c90a/artifacts
+end_time: 1764729407427
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 9cb5df13a9734bff84b50142b093c90a
+run_name: colorful-pig-47
+run_uuid: 9cb5df13a9734bff84b50142b093c90a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764729383781
+status: 3
+tags: []
+user_id: SCLee

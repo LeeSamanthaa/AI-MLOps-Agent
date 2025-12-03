@@ -49,6 +49,7 @@ from .utils import (
     get_processed_df, get_dataset_sample, generate_config_hash,
     generate_html_report, profile_data
 )
+from .rag_system import semantic_experiment_search, is_rag_available
 from .chatbot_executor import ChatbotExecutor
 
 # --- Library Availability Checks ---
@@ -1002,7 +1003,34 @@ def display_master_sidebar():
             st.session_state.view = 'experiments'
             st.rerun()
 
-        st.markdown("---")
+    st.markdown("---")
+    st.header("System Status")
+    # Check RAG system status with detailed diagnostics
+    try:
+        from modules.rag_system import LANGCHAIN_AVAILABLE, FAISS_AVAILABLE, initialize_rag_system
+
+        if not LANGCHAIN_AVAILABLE or not FAISS_AVAILABLE:
+            st.warning("RAG System: Missing dependencies (LangChain or FAISS not installed)")
+            st.info("To enable RAG: pip install langchain langchain-community faiss-cpu sentence-transformers")
+        elif st.session_state.get('rag_available', False):
+            st.success("RAG System: Active and ready")
+            if st.session_state.get('rag_vectorstore') is None:
+                st.info("RAG: No experiments indexed yet. Run a pipeline to build the index.")
+        else:
+            st.warning("RAG System: Available but not initialized")
+            if st.button("Initialize RAG", width='stretch'):
+                try:
+                    initialize_rag_system()
+                    st.session_state.rag_available = True
+                    st.success("RAG system initialized successfully")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to initialize RAG: {str(e)}")
+                    logging.error(f"RAG initialization failed: {e}", exc_info=True)
+    except ImportError as e:
+        st.error(f"RAG module error: {str(e)}")
+        logging.error(f"Could not import RAG module: {e}", exc_info=True)
+
 
         # --- AI Co-Pilot Chat with Extended Capabilities ---
         st.title("AI Co-Pilot")

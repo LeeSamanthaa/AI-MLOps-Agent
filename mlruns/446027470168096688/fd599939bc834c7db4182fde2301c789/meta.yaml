@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/fd599939bc834c7db4182fde2301c789/artifacts
+end_time: 1764743300157
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: fd599939bc834c7db4182fde2301c789
+run_name: whimsical-hog-277
+run_uuid: fd599939bc834c7db4182fde2301c789
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764743226597
+status: 3
+tags: []
+user_id: SCLee

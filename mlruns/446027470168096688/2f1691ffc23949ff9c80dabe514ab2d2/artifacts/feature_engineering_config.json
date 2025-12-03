@@ -1,0 +1,23 @@
+[
+  {
+    "technique": "polynomial",
+    "column": "SquareFootage",
+    "degree": 2,
+    "confidence_score": 75,
+    "rationale_long": "Creating degree-2 polynomial features for SquareFootage to capture non-linear relationships."
+  },
+  {
+    "technique": "polynomial",
+    "column": "Bedrooms",
+    "degree": 2,
+    "confidence_score": 75,
+    "rationale_long": "Creating degree-2 polynomial features for Bedrooms to capture non-linear relationships."
+  },
+  {
+    "technique": "polynomial",
+    "column": "Bathrooms",
+    "degree": 2,
+    "confidence_score": 75,
+    "rationale_long": "Creating degree-2 polynomial features for Bathrooms to capture non-linear relationships."
+  }
+]

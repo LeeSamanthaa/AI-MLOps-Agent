@@ -472,15 +472,16 @@ def run_pipeline(_df, config_hash, _progress_placeholder, _model_store, phase='b
             logging.info(f"Experiment {run_id} saved to history")
         except Exception as e:
             logging.warning(f"Could not save experiment to history: {e}")
-                    # Try to add experiment to RAG (completely safe - won't crash)
+                     # Try to add experiment to RAG (completely safe - won't crash)
         try:
-            from .rag_system import add_experiment_to_rag
-            experiment_id = f"exp_{run_id}_{phase}"
-            ai_summary = st.session_state.get('ai_summary', '')
-            add_experiment_to_rag(experiment_id, results_df, config, ai_summary)
-        except:
-            pass  # RAG not available, that's fine
-        # ===== STOP =====
+            if st.session_state.get('rag_available', False):
+                from .rag_system import add_experiment_to_rag
+                experiment_id = f"exp_{run_id}_{phase}"
+                ai_summary = st.session_state.get('ai_summary', '')
+                add_experiment_to_rag(experiment_id, results_df, config, ai_summary)
+                logging.info(f"Added experiment {experiment_id} to RAG index")
+        except Exception as e:
+            logging.warning(f"Could not add experiment to RAG: {e}")
         
         return results_df, le, X_train, y_train, X_test, y_test
     

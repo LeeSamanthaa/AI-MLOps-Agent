@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/ef4b4a57b2624823825320befe8a5b96/artifacts
+end_time: 1764730994492
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: ef4b4a57b2624823825320befe8a5b96
+run_name: wise-rook-674
+run_uuid: ef4b4a57b2624823825320befe8a5b96
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764730963350
+status: 3
+tags: []
+user_id: SCLee

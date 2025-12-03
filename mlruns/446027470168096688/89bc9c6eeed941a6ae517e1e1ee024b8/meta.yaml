@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/89bc9c6eeed941a6ae517e1e1ee024b8/artifacts
+end_time: 1764730346660
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 89bc9c6eeed941a6ae517e1e1ee024b8
+run_name: colorful-shrew-566
+run_uuid: 89bc9c6eeed941a6ae517e1e1ee024b8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764730284815
+status: 3
+tags: []
+user_id: SCLee

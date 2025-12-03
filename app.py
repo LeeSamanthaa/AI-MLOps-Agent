@@ -32,12 +32,19 @@ def main():
     
     # Initialize RAG System
     if 'rag_vectorstore' not in st.session_state:
-        # This safe import ensures app doesn't crash if RAG fails
         try:
-            from modules.rag_system import initialize_rag_system
-            initialize_rag_system()
-        except ImportError:
-            pass
+            from modules.rag_system import initialize_rag_system, LANGCHAIN_AVAILABLE, FAISS_AVAILABLE
+            
+            if LANGCHAIN_AVAILABLE and FAISS_AVAILABLE:
+                initialize_rag_system()
+                logging.info("RAG system initialized successfully")
+            else:
+                logging.warning("RAG dependencies not available - RAG features disabled")
+                st.session_state.rag_available = False
+                
+        except Exception as e:
+            logging.error(f"RAG initialization failed: {e}", exc_info=True)
+            st.session_state.rag_available = False
 
     # --- Main App Logic ---
     if not st.session_state.get('data_loaded', False):

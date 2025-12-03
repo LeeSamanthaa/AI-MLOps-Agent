@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/SCLee/Downloads/mlops-showcase/mlruns/446027470168096688/51b1208b4a504126a60eaaa9b104df54/artifacts
+end_time: 1764730465707
+entry_point_name: ''
+experiment_id: '446027470168096688'
+lifecycle_stage: active
+run_id: 51b1208b4a504126a60eaaa9b104df54
+run_name: clumsy-lynx-715
+run_uuid: 51b1208b4a504126a60eaaa9b104df54
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764730436036
+status: 3
+tags: []
+user_id: SCLee
