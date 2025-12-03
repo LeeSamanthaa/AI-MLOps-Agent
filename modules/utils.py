@@ -124,6 +124,8 @@ def initialize_session_state(force=False):
             'phase1_results': None,
             'experiment_history': [],
             'feature_count_before': None,
+            'rag_available': False,
+            'rag_vectorstore': None
         }
     
         for key, value in SESSION_DEFAULTS.items():

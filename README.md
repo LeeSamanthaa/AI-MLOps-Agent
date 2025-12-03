@@ -46,26 +46,30 @@ It transforms complex, multi-step MLOps workflows into intuitive, iterative proc
 The application is organized into a modular structure for maintainability and scalability:
 
 ```
+AI-MLOps-Agent/
+│
 ├── .github/
 │   └── workflows/
-│       └── ci.yaml                 # GitHub Actions CI/CD Pipeline
+│       └── ci.yaml                 # Continuous Integration / Deployment Pipeline
 │
-├── modules/                        # Core Python package
-│   ├── __init__.py                 # Marks directory as a package
-│   ├── chatbot_executor.py         # LLM command parsing & execution
-│   ├── llm_utils.py                # Groq API interaction & structured prompt engineering
-│   ├── pipeline.py                 # Core ML model pipeline logic
-│   ├── transformers.py             # Custom scikit-learn transformers
-│   └── utils.py                    # Helper functions (state, deployment assets)
+├── modules/                        # Core Python Package (Source of Truth)
+│   ├── __init__.py                 
+│   ├── chatbot_executor.py         # Conversational Agent: Command parsing (e.g., "drop column X")
+│   ├── llm_utils.py                # API Integration: Groq client, structured prompt engineering, and error handling
+│   ├── pipeline.py                 # Core ML Engine: Model training, hyperparameter tuning, and cross-validation
+│   ├── rag_system.py               # RAG System: Semantic search over experiment history (LangChain/FAISS)
+│   ├── transformers.py             # Custom Transforms: Outlier handling, feature engineering logic
+│   ├── ui_components.py            # User Interface: Streamlit component rendering and page layout
+│   └── utils.py                    # Helpers: State management, data loaders, and deployment asset generation
 │
 ├── tests/
-│   ├── __init__.py                 # Optional, for test discovery
-│   └── test_pipeline.py            # Pytest unit tests for core functionality
+│   └── test_pipeline.py            # Pytest Unit Tests for pipeline validation
 │
-├── app.py                          # Main Streamlit application entry point
-├── requirements.txt                # Python dependencies
-├── README.md                       # Project documentation
-└── setup.py / pyproject.toml       # (Optional) Packaging & installation metadata
+├── app.py                          # Streamlit Main Application Entry Point
+├── requirements.txt                # Core Python Dependencies
+├── requirements_rag.txt            # Optional RAG Dependencies (LangChain, FAISS)
+├── README.md                       # Project Documentation
+└── .gitignore                      # Files to ignore in Git version control
 ``` 
 
 
@@ -104,3 +108,4 @@ This entire project was developed solely by **Samantha** as a full-stack solutio
 
 For questions, feedback, or professional inquiries, please contact: Always seeking to make improvements!
 * **Email:** [Samantha.dataworks@gmail.com](mailto:Samantha.dataworks@gmail.com)
+

@@ -30,6 +30,15 @@ def main():
     # Initialize session state if it's the first run
     initialize_session_state()
     
+    # Initialize RAG System
+    if 'rag_vectorstore' not in st.session_state:
+        # This safe import ensures app doesn't crash if RAG fails
+        try:
+            from modules.rag_system import initialize_rag_system
+            initialize_rag_system()
+        except ImportError:
+            pass
+
     # --- Main App Logic ---
     if not st.session_state.get('data_loaded', False):
         st.session_state.view = 'welcome'

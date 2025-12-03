@@ -11,7 +11,6 @@
 # ============================================================================
 # modules/ui_components.py
 # UX ENHANCEMENT - Implemented a non-linear workflow allowing users to revisit steps.
-# UX ENHANCEMENT - Removed all emojis and informal toasts for a professional UI.
 # UX ENHANCEMENT - Added quick navigation with descriptive labels and automatic EDA refresh on feature changes.
 # BUG FIX - Resolved circular import by moving initialize_session_state import to local scope.
 # UX FIX - Removed redundant visual step header, leaving only the clean quick navigation buttons.
@@ -41,8 +40,8 @@ from .llm_utils import (generate_llm_response, get_feature_engineering_prompt,
                         get_ai_config_prompt, get_rag_expert_context,
                         generate_dynamic_data_context, get_vif_analysis_prompt,
                         get_ensemble_guidance_prompt, get_eda_summary_prompt,
-                        execute_data_transformation)
-from .pipeline import run_pipeline, get_models_and_search_spaces, suggest_base_models
+                        execute_data_transformation, parse_ai_recommendations)
+from .pipeline import (run_pipeline, get_models_and_search_spaces, suggest_base_models,get_shap_values)
 from .transformers import AIFeatureEngineer
 from .utils import (
     load_data, get_sample_datasets, FeatureDetector, convert_df_to_csv,
@@ -1844,8 +1843,9 @@ def display_results_page():
 
     st.header("Results Dashboard")
     
-    # Create 7 tabs
-    tabs = [
+    # --- TAB CREATION LOGIC ---
+    # 1. Define the standard tabs
+    tabs_list = [
         "Performance Comparison", 
         "Run History", 
         "AI Summary & Actions", 
@@ -1854,8 +1854,34 @@ def display_results_page():
         "Drift Monitoring", 
         "Deployment"
     ]
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(tabs)
-    
+
+    # 2. Insert RAG tab if available
+    if st.session_state.get('rag_available', False):
+        tabs_list.insert(2, "Semantic Search")
+
+    # 3. Generate the tabs
+    all_tabs = st.tabs(tabs_list)
+
+    # 4. Map tabs to variables by index
+    # Note: We increment idx after every assignment to keep track of where we are
+    idx = 0
+    tab1 = all_tabs[idx]; idx += 1  # Performance
+    tab2 = all_tabs[idx]; idx += 1  # History
+
+    # Conditional RAG assignment
+    if st.session_state.get('rag_available', False):
+        tab_rag = all_tabs[idx]; idx += 1
+    else:
+        tab_rag = None
+
+    tab3 = all_tabs[idx]; idx += 1  # AI Summary
+    tab4 = all_tabs[idx]; idx += 1  # Inspector
+    tab5 = all_tabs[idx]; idx += 1  # Explainability
+    tab6 = all_tabs[idx]; idx += 1  # Drift
+    tab7 = all_tabs[idx]; idx += 1  # Deployment
+
+    # --- TAB CONTENT ---
+
     # TAB 1: Performance Comparison
     with tab1:
         st.dataframe(results_df_sorted.drop(columns='model_id').style.highlight_max(axis=0, color='#d4edda', subset=[metric_col]))
@@ -1866,7 +1892,6 @@ def display_results_page():
         if st.session_state.get('experiment_history'):
             history_df = pd.DataFrame(st.session_state.experiment_history)
             display_cols = ['timestamp', 'best_model', 'best_score', 'metric_name', 'num_features']
-            # FIX: Removed use_container_width=True to resolve warning
             st.dataframe(history_df[display_cols].tail(10))
             
             # Show comparison chart
@@ -1881,7 +1906,7 @@ def display_results_page():
                     hovertemplate='Run %{x}<br>Model: %{text}<br>Score: %{y:.4f}<extra></extra>'
                 ))
                 fig.update_layout(
-                    title=f'Score Improvement Over Runs',
+                    title=f'Score Improvement Over Runs',   
                     xaxis_title='Run Number',
                     yaxis_title=metric_col,
                     height=400
@@ -1889,7 +1914,12 @@ def display_results_page():
                 st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No previous runs to compare. Run the pipeline multiple times to see trends.")
-    
+
+    # TAB RAG: Semantic Search (Conditional)
+    if st.session_state.get('rag_available', False) and tab_rag:
+        with tab_rag:
+            display_semantic_search_tab()
+
     # TAB 3: AI Summary & Actions
     with tab3:
         display_ai_summary_tab()
@@ -1910,12 +1940,15 @@ def display_results_page():
     with tab7:
         display_deployment_tab(best_model, best_row)
 
+    # Global "New Project" button at bottom of results
     if st.button("Start New Project (Back to Configuration)", width='stretch'):
         st.session_state.view = 'configuration'
         # Reset workflow for a new run, but keep data
         st.session_state.workflow_step = 1
         st.session_state.step_completion = {key: False for key in st.session_state.step_completion}
         st.rerun()
+
+# --- Helper Functions for Results Page ---
 
 def display_ensemble_creation_panel(phase1_df, metric):
     with st.container(border=True):
@@ -1942,7 +1975,6 @@ def display_ensemble_creation_panel(phase1_df, metric):
             for error in validation_errors:
                 st.warning(error)
 
-        # FIX: Added width='stretch'
         if st.button("Train Ensemble Model", type="primary", width='stretch', disabled=bool(validation_errors)):
             with st.spinner("Training ensemble model..."):
                 # Force unique config hash for ensemble
@@ -1968,7 +2000,6 @@ def display_ensemble_creation_panel(phase1_df, metric):
                     # Append new ensemble to existing results
                     if current_results_df is not None:
                         # Remove old ensemble if it exists
-                        ensemble_name = 'Voting Classifier' if st.session_state.config['problem_type'] == 'Classification' else 'Voting Regressor'
                         current_results_df = current_results_df[~current_results_df['Model'].str.contains('Voting', na=False)]
                         
                         # Combine with new ensemble
@@ -2045,27 +2076,7 @@ def display_pipeline_settings(df_for_config):
             st.session_state.config['imbalance_method'] = "None"
         
         st.slider("Tuning Iterations", 5, 50, key='widget_bayes_iterations', on_change=update_config, args=('bayes_iterations',), help="Number of iterations for Bayesian hyperparameter optimization.")
-        
-def display_manual_tuning_section():
-    # This function is not called in the main flow but is kept for potential future use
-    pass
 
-
-import os
-import hashlib
-import logging
-import streamlit as st
-# Assuming llm_utils and apply_ai_recommendations are defined elsewhere
-from .llm_utils import generate_llm_response, parse_ai_recommendations
-from .ui_components import apply_ai_recommendations # Make sure this is imported
-
-import os
-import hashlib
-import logging
-import streamlit as st
-# Assuming llm_utils and apply_ai_recommendations are defined elsewhere
-from .llm_utils import generate_llm_response, parse_ai_recommendations
-from .ui_components import apply_ai_recommendations # Make sure this is imported
 
 def display_ai_summary_tab():
     st.subheader("AI Executive Summary & Action Panel")
@@ -2132,9 +2143,8 @@ Format the response in clear Markdown."""
                 action_text = action.get('action_text', 'N/A')
                 st.info(f"**Recommendation {i}:** {action_text}")
 
-            # FIX: Replaced use_container_width=True with width='stretch'
             if st.button("Apply Recommendations & Return to Configuration", width='stretch'):
-                 apply_ai_recommendations() # Make sure this function is defined and imported
+                 apply_ai_recommendations()
 
 def display_performance_metrics_tab(results_df, X_test, y_test, le, metric):
     st.subheader("Model Inspector")
@@ -2169,113 +2179,6 @@ def display_explainability_tab(best_model_row, best_model, X_test):
         return
         
     explain_tabs = st.tabs(["Feature Importance (SHAP)", "Advanced Explainability (PDP)"])
-
-@st.cache_data
-def get_shap_values(_best_model, _X_test):
-    if _X_test.empty:
-        st.warning("Cannot generate SHAP values because the test set is empty.")
-        return None, None
-    
-    try:
-        model_key = 'classifier' if st.session_state.config['problem_type'] == 'Classification' else 'regressor'
-        
-        # Get the final estimator (the actual model)
-        if model_key not in _best_model.named_steps:
-            st.error(f"Model does not have a '{model_key}' step.")
-            return None, None
-            
-        explainer_model = _best_model.named_steps[model_key]
-        
-        # Create preprocessor pipeline (everything except the final estimator)
-        preprocessor_steps = []
-        for step_name, step_transformer in _best_model.steps[:-1]:
-            preprocessor_steps.append((step_name, step_transformer))
-        
-        if not preprocessor_steps:
-            st.error("No preprocessing steps found in pipeline.")
-            return None, None
-            
-        preprocessor = Pipeline(steps=preprocessor_steps)
-        
-        # Transform the test data
-        X_test_transformed = preprocessor.transform(_X_test)
-        
-        # Get feature names - handle different pipeline structures
-        feature_names = []
-        try:
-            # Try to get feature names from the preprocessor
-            if hasattr(preprocessor, 'get_feature_names_out'):
-                feature_names = list(preprocessor.get_feature_names_out())
-            else:
-                # Manually construct feature names from ColumnTransformer
-                if 'preprocessor' in preprocessor.named_steps:
-                    col_transformer = preprocessor.named_steps['preprocessor']
-                    
-                    for name, transformer, columns in col_transformer.transformers_:
-                        if name == 'remainder':
-                            continue
-                            
-                        if name == 'num':
-                            # Numerical features keep their names
-                            feature_names.extend(columns)
-                        elif name == 'cat':
-                            # Get one-hot encoded feature names
-                            if hasattr(transformer.named_steps['onehot'], 'get_feature_names_out'):
-                                cat_features = transformer.named_steps['onehot'].get_feature_names_out(columns)
-                                feature_names.extend(cat_features)
-                            else:
-                                # Fallback: just use the column names
-                                feature_names.extend(columns)
-        except Exception as e:
-            logging.warning(f"Could not get feature names automatically: {e}")
-            # Fallback: use generic names
-            n_features = X_test_transformed.shape[1] if hasattr(X_test_transformed, 'shape') else len(X_test_transformed[0])
-            feature_names = [f'feature_{i}' for i in range(n_features)]
-        
-        # Convert to DataFrame
-        if hasattr(X_test_transformed, "toarray"):
-            X_test_array = X_test_transformed.toarray()
-        else:
-            X_test_array = X_test_transformed
-            
-        X_test_df = pd.DataFrame(X_test_array, columns=feature_names)
-        
-        # Limit to first 100 samples for faster computation
-        X_test_sample = X_test_df.head(100)
-        
-        # Create SHAP explainer
-        try:
-            explainer = shap.Explainer(explainer_model, X_test_sample)
-            shap_values = explainer(X_test_sample)
-            return shap_values, X_test_sample
-        except Exception as e:
-            logging.error(f"SHAP explainer creation failed: {e}")
-            # Try TreeExplainer for tree-based models
-            try:
-                explainer = shap.TreeExplainer(explainer_model)
-                shap_values = explainer.shap_values(X_test_sample)
-                
-                # TreeExplainer returns different format for multi-class
-                if isinstance(shap_values, list):
-                    shap_values = shap_values[0]  # Use first class for visualization
-                    
-                # Convert to Explanation object for consistency
-                shap_explanation = shap.Explanation(
-                    values=shap_values,
-                    base_values=explainer.expected_value if not isinstance(explainer.expected_value, list) else explainer.expected_value[0],
-                    data=X_test_sample.values,
-                    feature_names=feature_names
-                )
-                return shap_explanation, X_test_sample
-            except Exception as e2:
-                logging.error(f"TreeExplainer also failed: {e2}")
-                st.error(f"Could not create SHAP explainer. Error: {e2}")
-                return None, None
-                
-    except Exception as e:
-        st.error(f"Could not generate SHAP values. Error: {e}")
-        logging.error("SHAP value generation failed.", exc_info=True)
-        return None, None
 
     with explain_tabs[0]:
         st.markdown("SHAP (SHapley Additive exPlanations) values show the impact of each feature on individual predictions, highlighting which features are most important globally.")
@@ -2342,7 +2245,6 @@ def display_deployment_tab(best_model, best_model_row):
     st.info("Download the best model by itself or as a complete, production-ready package.")
     col1, col2 = st.columns(2)
     with col1:
-        # Simple model download
         st.download_button(
             label="Download Model Only (.pkl)",
             data=pickle.dumps(best_model),
@@ -2352,7 +2254,6 @@ def display_deployment_tab(best_model, best_model_row):
             help="Downloads only the trained model file."
         )
     with col2:
-        # Complete deployment package download
         from .utils import generate_deployment_package
         deployment_zip = generate_deployment_package(best_model, st.session_state.config)
         st.download_button(
@@ -2379,7 +2280,6 @@ def display_deployment_tab(best_model, best_model_row):
         <strong>To deploy with Docker:</strong> <code>unzip</code> → <code>docker build -t api .</code> → <code>docker run -p 8000:8000 api</code>
     </div>
     """, unsafe_allow_html=True)
-    # The HTML Report button
     best_model_name = best_model_row['Model']
     html_report = generate_html_report(best_model_name)
     st.download_button(
@@ -2391,7 +2291,6 @@ def display_deployment_tab(best_model, best_model_row):
     )
 
 def display_experiment_tracking_page():
-    """Displays the experiment history in a dashboard format."""
     st.title("Experiment Tracking Dashboard")
     if not st.session_state.get('experiment_history'):
         st.info("No experiments have been run yet. Run a pipeline from the 'Configuration' page to see results here.")
@@ -2406,7 +2305,6 @@ def display_experiment_tracking_page():
         'best_score', 'metric_name', 'num_features', 'ai_features_used'
     ]
     
-    # FIX: Removed use_container_width=True to resolve warning
     st.dataframe(
         history_df[display_cols].sort_values('timestamp', ascending=False),
         hide_index=True
@@ -2439,3 +2337,56 @@ def display_experiment_tracking_page():
             
         with st.expander("Show Full Configuration for Selected Experiment"):
             st.json(selected_exp['full_config'])
+    
+def display_semantic_search_tab():
+    st.subheader("Semantic Experiment Search")
+    st.markdown("Search your ML experiment history using natural language")
+    
+    try:
+        from .rag_system import semantic_experiment_search, is_rag_available
+        
+        if not is_rag_available():
+            st.warning("No experiments indexed yet. Run a pipeline first to build the search index.")
+            return
+        
+        search_query = st.text_input(
+            "Ask about past experiments:",
+            placeholder="e.g., 'Find classification experiments with accuracy > 0.90'",
+            key="rag_search_query"
+        )
+        
+        with st.expander("Example Queries"):
+            st.markdown("""
+            - "Show me my best classification models"
+            - "Find experiments that used XGBoost"
+            - "What were my regression models with R² above 0.85?"
+            - "Show experiments with SMOTE enabled"
+            """)
+        
+        if st.button("Search", type="primary", width='stretch') and search_query:
+            with st.spinner("Searching experiments..."):
+                results = semantic_experiment_search(search_query, k=3)
+            
+            if not results:
+                st.info("No matching experiments found. Try running more experiments first.")
+            else:
+                st.success(f"Found {len(results)} relevant experiments")
+                
+                for i, result in enumerate(results, 1):
+                    with st.expander(
+                        f"Rank {i}: {result['experiment_id']} "
+                        f"(Similarity: {result['similarity_score']:.2f})",
+                        expanded=(i == 1)
+                    ):
+                        col_a, col_b = st.columns(2)
+                        col_a.metric("Best Model", result['best_model'])
+                        col_b.metric("Score", f"{result['best_score']:.4f}")
+                        
+                        st.markdown("**Excerpt:**")
+                        st.info(result['content_preview'])
+    
+    except ImportError:
+        st.error("RAG module not found. Please check modules/rag_system.py exists.")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        logging.error(f"Semantic search tab error: {e}", exc_info=True)

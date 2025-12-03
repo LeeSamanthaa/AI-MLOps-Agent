@@ -153,6 +153,93 @@ def suggest_base_models(results_df, metric):
     
     return suggestions
 
+# --- SHAP Integration ---
+
+# Import SHAP within the file for dependency check
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except ImportError:
+    SHAP_AVAILABLE = False
+
+
+def get_shap_values(model, X_test):
+    """
+    Calculates SHAP values for the trained model.
+    This safely extracts the final estimator from the pipeline and transforms the data.
+    """
+    if not SHAP_AVAILABLE:
+        logging.warning("SHAP is not available. Skipping calculation.")
+        return None, None
+    
+    # Extract the final estimator and preprocessed data
+    try:
+        # 1. Get the preprocessor step
+        preprocessor = model.named_steps['preprocessor']
+        
+        # 2. Transform the test data
+        X_test_transformed = preprocessor.transform(X_test)
+        
+        # 3. Handle features for column names (Get feature names after one-hot encoding)
+        feature_names = preprocessor.get_feature_names_out(X_test.columns)
+        X_test_df = pd.DataFrame(X_test_transformed, columns=feature_names)
+        
+        # 4. Get the final estimator (e.g., LogisticRegression, XGBoost, etc.)
+        final_estimator = None
+        for step_name in model.named_steps:
+            if step_name not in ['preprocessor', 'feature_selection', 'smote', 'ensemble']:
+                final_estimator = model.named_steps[step_name]
+                break
+        
+        if final_estimator is None:
+            # Handle Voting Classifier/Regressor where the name is 'ensemble'
+            if 'ensemble' in model.named_steps:
+                final_estimator = model.named_steps['ensemble']
+            else:
+                logging.error("Could not find final estimator in pipeline steps.")
+                return None, None
+
+        # 5. Calculate SHAP values
+        model_name = final_estimator.__class__.__name__
+        if 'RandomForest' in model_name or 'XGBoost' in model_name or 'LightGBM' in model_name:
+            # Use TreeExplainer for tree-based models
+            explainer = shap.TreeExplainer(final_estimator)
+            shap_values = explainer.shap_values(X_test_df)
+            
+            # For multi-class classification, shap_values is a list of arrays.
+            # Use the first class's values or average them for the summary plot.
+            if isinstance(shap_values, list) and len(shap_values) > 1:
+                # We often use the second class (index 1) for binary classification importance
+                # or average the absolute values for multi-class global importance.
+                # Returning the primary output array:
+                shap_output = shap_values[1] if len(shap_values) == 2 else np.abs(np.array(shap_values)).mean(axis=0)
+            else:
+                 shap_output = shap_values
+            
+        elif hasattr(final_estimator, 'predict_proba') or hasattr(final_estimator, 'predict'):
+            # Use KernelExplainer or other appropriate explainer for non-tree models
+            # Since KernelExplainer is very slow, we recommend using a smaller sample of data
+            # For simplicity, we use Explainer and rely on the model type detection
+            try:
+                # Use a small sample for KernelExplainer if necessary
+                sample_data = X_test_df.head(100)
+                explainer = shap.Explainer(final_estimator, sample_data)
+                shap_output = explainer(X_test_df)
+            except Exception as e:
+                logging.error(f"Failed using generic SHAP Explainer: {e}")
+                return None, None
+        else:
+            logging.warning("SHAP calculation skipped: Model type not supported or recognized.")
+            return None, None
+        
+        # Ensure we return the SHAP Values object and the data used
+        return shap_output, X_test_df.reset_index(drop=True)
+
+    except Exception as e:
+        logging.error(f"Error calculating SHAP values: {e}", exc_info=True)
+        return None, None
+
+
 # FIX: Modified function signature to remove the 'progress_tracker' parameter.
 def train_single_model(name, model_info, X_train, y_train, X_test, y_test, preprocessor, config, run_id):
     """Function to train a single model, designed to be run in parallel."""
@@ -385,8 +472,18 @@ def run_pipeline(_df, config_hash, _progress_placeholder, _model_store, phase='b
             logging.info(f"Experiment {run_id} saved to history")
         except Exception as e:
             logging.warning(f"Could not save experiment to history: {e}")
+                    # Try to add experiment to RAG (completely safe - won't crash)
+        try:
+            from .rag_system import add_experiment_to_rag
+            experiment_id = f"exp_{run_id}_{phase}"
+            ai_summary = st.session_state.get('ai_summary', '')
+            add_experiment_to_rag(experiment_id, results_df, config, ai_summary)
+        except:
+            pass  # RAG not available, that's fine
+        # ===== STOP =====
         
         return results_df, le, X_train, y_train, X_test, y_test
+    
     
     except Exception as e:
         st.error(f"A critical error occurred in the MLOps pipeline: {e}")

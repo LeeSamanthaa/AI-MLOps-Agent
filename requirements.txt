@@ -23,3 +23,7 @@ python-dotenv==1.0.1
 # Added for multi-format file support
 openpyxl
 pyarrow
+langchain
+langchain-community
+faiss-cpu
+sentence-transformers
